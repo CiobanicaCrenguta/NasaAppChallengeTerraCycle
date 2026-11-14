@@ -17,7 +17,8 @@ def _d(key: str) -> date:
 
 
 class Weather:
-    def __init__(self, days: dict[str, dict[str, float]]):
+    def __init__(self, days: dict[str, dict[str, float]], south: bool = False):
+        self.south = south  # south of the equator summer is December to February
         self.days = {_d(k): v for k, v in days.items()}
         self.last = max(self.days)  # last day with data
 
@@ -50,8 +51,9 @@ class Weather:
     def summer_temp_by_year(self) -> dict[int, float]:
         out = {}
         for y in range(2001, self.last.year + 1):
-            hi = self._mean("tmax", date(y, 6, 1), date(y, 8, 31), 85)
-            lo = self._mean("tmin", date(y, 6, 1), date(y, 8, 31), 85)
+            start, end = (date(y - 1, 12, 1), date(y, 3, 1) - timedelta(days=1)) if self.south else (date(y, 6, 1), date(y, 8, 31))
+            hi = self._mean("tmax", start, end, 85)
+            lo = self._mean("tmin", start, end, 85)
             if hi is not None and lo is not None:
                 out[y] = (hi + lo) / 2
         return out
@@ -142,15 +144,17 @@ def insight_cards(w: Weather) -> list[dict]:
     else:
         take = f"Summer {y} was about as warm as usual here."
     cards.append({"id": "temp", "scope": "area", "takeaway": take, "series": {
-        "kind": "line", "title": "Average temperature, June to August, °C", "labels": _yy(years),
+        "kind": "line", "title": f"Average temperature, {'December to February' if w.south else 'June to August'}, °C",
+        "labels": _yy(years),
         "values": [round(temp[k], 1) for k in years], "highlightIndex": len(years) - 1, "source": src}})
 
     # soil wetness this year
     months, this, usual = w.soil_by_month()
     if months:
         # July to September is when crops run short of water; judge that window once it is complete
-        season = [i for i, m in enumerate(months) if 7 <= m <= 9]
-        span = "from July to September"
+        first = 1 if w.south else 7  # the three months after midsummer
+        season = [i for i, m in enumerate(months) if first <= m <= first + 2]
+        span = "from January to March" if w.south else "from July to September"
         if len(season) < 3:
             season, span = list(range(len(months))), "so far this year"
         rel = mean(this[i] for i in season) / mean(usual[i] for i in season) - 1

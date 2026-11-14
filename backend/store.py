@@ -1,10 +1,13 @@
 """Fields and the crop table. Geometry is real; crops and history are sample values."""
 import json
 import math
+import os
 from pathlib import Path
 
 HERE = Path(__file__).parent
-_raw = json.loads((HERE / "fields.json").read_text(encoding="utf-8"))
+# TERRACYCLE_FIELDS picks another farm, e.g. fields_world.json; the default is the demo farm.
+FIELDS_FILE = HERE / os.environ.get("TERRACYCLE_FIELDS", "fields.json")
+_raw = json.loads(FIELDS_FILE.read_text(encoding="utf-8"))
 USER = _raw["user"]
 
 
@@ -32,7 +35,7 @@ def centroid(geometry) -> tuple[float, float]:
 
 FIELDS = _raw["fields"]
 for f in FIELDS:
-    f["ha"] = round(area_ha(f["geometry"]), 1)
+    f["ha"] = round(area_ha(f["geometry"]), 1 if area_ha(f["geometry"]) >= 1 else 2)  # small plots keep two decimals
 
 
 def field(field_id):
@@ -45,19 +48,33 @@ def area_point() -> tuple[float, float]:
     return (round(sum(c[0] for c in cs) / len(cs), 3), round(sum(c[1] for c in cs) / len(cs), 3))
 
 
-# PLACEHOLDER crop table. water / soil / income are 1 (low) to 3 (high); min_gap = years before
-# the crop may return to the same field. To be replaced by a sourced agronomy table.
+# Names of the crops the app knows. Everything else about a crop is in crops.json, with its source.
 CROPS = [
-    {"id": "barley", "name": "Winter barley", "family": "cereal", "water": 1, "soil": 1, "income": 1, "early": True},
-    {"id": "wheat", "name": "Winter wheat", "family": "cereal", "water": 2, "soil": 1, "income": 2, "early": True},
-    {"id": "rapeseed", "name": "Rapeseed", "family": "brassica", "water": 2, "soil": 2, "income": 3, "early": True, "min_gap": 3},
-    {"id": "corn", "name": "Corn", "family": "maize", "water": 3, "soil": 1, "income": 3},
-    {"id": "sunflower", "name": "Sunflower", "family": "aster", "water": 2, "soil": 1, "income": 3, "min_gap": 4},
-    {"id": "peas", "name": "Peas", "family": "legume", "water": 1, "soil": 3, "income": 1, "nfix": True, "early": True, "min_gap": 4},
-    {"id": "soy", "name": "Soybean", "family": "legume", "water": 3, "soil": 3, "income": 2, "nfix": True, "min_gap": 3},
-    {"id": "alfalfa", "name": "Alfalfa", "family": "legume", "water": 2, "soil": 3, "income": 1, "nfix": True},
-    {"id": "sorghum", "name": "Sorghum", "family": "sorghum", "water": 1, "soil": 1, "income": 1},
+    {"id": "barley", "name": "Winter barley"},
+    {"id": "wheat", "name": "Winter wheat"},
+    {"id": "rapeseed", "name": "Rapeseed"},
+    {"id": "corn", "name": "Corn"},
+    {"id": "sunflower", "name": "Sunflower"},
+    {"id": "peas", "name": "Peas"},
+    {"id": "soy", "name": "Soybean"},
 ]
+
+
+def weather_point(field_id=None) -> tuple[float, float]:
+    """Where to read area weather for a field. Fields close together share one point (and one download);
+    a field far from the others gets its own."""
+    middle = area_point()
+    centres = {f["id"]: centroid(f["geometry"]) for f in FIELDS}
+    if all(abs(c[0] - middle[0]) < 0.25 and abs(c[1] - middle[1]) < 0.25 for c in centres.values()):
+        return middle
+    c = centres.get(field_id) or centres[FIELDS[0]["id"]]
+    return (round(c[0], 2), round(c[1], 2))
+
+
+def in_romania() -> bool:
+    """Rough box around Romania. The sowing dates in crops.json are from southern Romania only."""
+    lat, lon = area_point()
+    return 43.6 <= lat <= 48.3 and 20.2 <= lon <= 29.8
 
 
 def crop(crop_id):

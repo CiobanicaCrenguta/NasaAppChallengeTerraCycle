@@ -1,0 +1,1 @@
+{"type": "FeatureCollection", "cell_m": 10, "grid": "EPSG:32737", "weak_rel": -0.1, "features": [{"type": "Feature", "geometry": {"geodesic": false, "type": "Point", "coordinates": [36.04996547176745, -0.3499801169499494]}, "properties": {"rel": 0, "weak_years": 0, "years": 10}}]}

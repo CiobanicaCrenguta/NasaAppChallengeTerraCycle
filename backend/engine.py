@@ -1,20 +1,25 @@
 """The conversation: understands a question or a tapped reply and returns one structured answer.
 
 Honesty rules:
-- weather facts come from analysis.py (computed from NASA POWER);
+- weather facts come from analysis.py (computed from NASA POWER); `weather` below is a function that
+  returns the weather record for a field's place;
 - the local language model (llm.py) only reads the question and words answers from facts we give it;
   sowing, crop-gap, heat and soil answers come from knowledge.py and always carry their source;
-- crop greenness is not connected yet, so field-health questions say so instead of guessing;
-- the rotation pick uses a PLACEHOLDER rule table (store.CROPS) and says what it is based on.
+- field health comes from fieldstate.py: what Sentinel-2 and HLS measured, never a cause;
+- the rotation pick comes from rotation.py: sourced rules from crops.json, then NASA POWER rain against
+  FAO ECOCROP ranges; every exclusion shows its source.
 """
+import difflib
 import re
 import unicodedata
 import uuid
 
 import analysis
+import fieldstate
 import knowledge
 import llm
-from store import CROPS, FIELDS, HERE, crop, field
+import rotation
+from store import CROPS, FIELDS, HERE, crop, field, in_romania
 
 SESSIONS: dict[str, dict] = {}
 
@@ -33,82 +38,69 @@ def _msg(text, f=None, **extra):
     return m
 
 
-# ---------- rotation (placeholder rules) ----------
-def _score(c, past, priority):
-    rev = list(reversed(past))
-    since = rev.index(c["id"]) if c["id"] in rev else None  # 0 = last year
-    if since is not None and since < c.get("min_gap", 2) - 1:
-        return float("-inf")
-    last = crop(past[-1])
-    if priority == "water":
-        s = (4 - c["water"]) * 2 + (1 if c.get("early") else 0)
-    elif priority == "soil":
-        s = c["soil"] * 2 + (1 if c.get("nfix") else 0)
-    else:
-        s = c["income"] * 2
-    if c["family"] == last["family"]:
-        s -= 3
-    if not any(crop(p)["family"] == c["family"] for p in past[-2:]):
-        s += 1
-    return s
+# ---------- rotation: sourced rules, then the rain record ----------
+RAIN_NOTE = ("Rain is NASA POWER's estimate for your area, 2001-2020. The rain each crop needs is FAO ECOCROP's range: one yearly "
+             "figure per species for the whole world. It does not know when in the year the rain falls, so it is hard on winter crops.")
 
 
-def _plan(f, priority):
-    past = [h["cropId"] for h in f["history"]]
-    year = f["history"][-1]["year"]
-    out = []
-    for _ in range(3):
-        best = max(CROPS, key=lambda c: _score(c, past, priority))  # ties: first in the table
-        past.append(best["id"])
-        year += 1
-        out.append({"year": year, "crop": best["name"], "cropId": best["id"]})
-    return out
+def _left_out(item):
+    text = f"Left out {item['text']} [{item['source']}]"
+    return text + (" (value not confirmed yet)" if item["status"] != "verificat" else "")
 
 
-def _rotation(s):
+def _rotation(s, weather):
     f, p = field(s["fieldId"]), s["priority"]
-    plan = _plan(f, p)
-    pick, last = crop(plan[0]["cropId"]), crop(f["cropId"])
+    steps = rotation.plan(f["history"], p, weather(f["id"]).rain_by_year())
+    if not steps:
+        return _msg(f"I can't suggest a crop for {f['name']} with the rules I have.", f,
+                    detail="Every crop in my table is ruled out by a rotation rule for this field's history.", replies=LIMITS_REPLY)
+    first = steps[0]
+    pick, out = first["candidates"][0], first["excluded"]
+    fit = pick["fit"]
     reasons = []
-    if pick["family"] != last["family"]:
-        reasons.append(f"Breaks the disease cycle after {last['name'].lower()}")
-    if p == "water" and pick["water"] == 1:
-        reasons.append("Needs little water")
-    if p == "water" and pick.get("early"):
-        reasons.append("Harvested before the July heat")
-    if p == "soil" and pick.get("nfix"):
-        reasons.append("Puts nitrogen back into the soil")
+    if p == "soil" and pick["nitrogen"]:
+        reasons.append("Leaves nitrogen in the soil for the next crop [S6]")
+    reasons.append(f"Enough rain for it here in {fit['optimal_years']} of {fit['years']} years")
+    if pick["fresh"]:
+        reasons.append("Not grown on this field in the last 3 years")
+    last = f["history"][-1]["cropId"]
+    shown = next((x for x in out if x["id"] == last), out[0] if out else None)
+    detail = None
     if p == "income":
-        reasons.append("Usually pays better than the other crops that fit")
-    gap = last.get("min_gap", 2)
+        detail = ("I have no price data, so I can't rank crops by income. This is the crop that fits your rotation and the rain "
+                  "here best. Check it against local prices.")
     return _msg(
-        f"Plant {pick['name'].lower()} on {f['name']}.", f,
-        cards=[{"type": "rotation", "plan": [{"year": x["year"], "crop": x["crop"]} for x in plan], "reasons": reasons[:2],
-                "avoid": f"Not {last['name'].lower()} again: leave {gap} years between"}],
+        f"Plant {knowledge.name(pick['id'])} on {f['name']}.", f, detail=detail,
+        cards=[{"type": "rotation", "plan": [{"year": x["year"], "crop": crop(x["cropId"])["name"]} for x in steps],
+                "reasons": reasons[:2], **({"avoid": _left_out(shown)} if shown else {})}],
         replies={"id": "next", "options": [{"value": "why", "label": "Why?"}, {"value": "priority", "label": "Change priority"}]},
     )
 
 
 def _why(s, weather):
     f, p = field(s.get("fieldId")), s.get("priority")
-    limits = {"id": "next", "options": [{"value": "limits", "label": "What can't you see?"}]}
-    if p == "water":
-        text, series = analysis.july_card(weather)
-        return _msg(text, f,
-                    detail="With saving water as your priority, I prefer crops that finish before July or need little water. "
-                           "The rain is an estimate for your area, not measured on your field.",
-                    cards=[{"type": "chart", "series": series}], replies=limits)
+    if not f or not p:  # not known (e.g. the server restarted): ask again rather than guess
+        s["intent"] = "rotation"
+        return _next(s, weather)
+    steps = rotation.plan(f["history"], p, weather(f["id"]).rain_by_year())
+    if not steps:
+        return _rotation(s, weather)
+    first = steps[0]
+    parts = []
+    if first["excluded"]:
+        parts.append("Rotation rules: " + "; ".join(_left_out(x)[len("Left out "):] for x in first["excluded"]) + ".")
+    ranked = ", ".join(f"{knowledge.name(c['id'])} {c['fit']['optimal_years']} of {c['fit']['years']} years"
+                       f" (from {c['fit']['optimal_mm']} mm a year)" for c in first["candidates"])
+    parts.append(f"Years with enough rain for each crop that remains: {ranked}.")
     if p == "soil":
-        return _msg("Because the soil comes first for you.", f,
-                    detail="I prefer crops that put nitrogen back and leave the soil in better shape, and I keep crops of the same family apart. "
-                           "These are general rotation rules, not measurements from your field.", replies=limits)
+        parts.append("With soil first, crops that leave nitrogen in the soil go ahead [S6].")
     if p == "income":
-        return _msg("Because income comes first for you.", f,
-                    detail="I rank the crops that fit your rotation by a rough income score. That score is not from NASA data. "
-                           "Check it against local prices before you decide.", replies=limits)
-    # the priority is not known (e.g. the server restarted): ask for it again rather than guess
-    s["intent"] = "rotation"
-    return _next(s, weather)
+        parts.append("I have no price data, so income did not change the order.")
+    parts.append("A crop not grown here in the last 3 years goes ahead of one that was [S1].")
+    parts.append(RAIN_NOTE)
+    rain_chart = analysis.insight_cards(weather(f["id"]))[0]["series"]
+    return _msg("It passes the rotation rules and suits the rain here best.", f, detail=" ".join(parts),
+                cards=[{"type": "chart", "series": rain_chart}], replies=LIMITS_REPLY)
 
 
 def _limits():
@@ -116,13 +108,42 @@ def _limits():
         "Packed soil below the surface", "Pests and disease", "Blocked drains"]}])
 
 
-# ---------- field health: not connected yet ----------
+# ---------- field health: what the satellites measured ----------
 def _health(s):
     f = field(s["fieldId"])
-    return _msg(f"I don't have satellite readings for {f['name']} yet.", f,
-                detail="How green the crop is, from satellite images, is not connected yet. "
-                       "What I do have is the weather for your area, on the Data page.",
-                replies={"id": "next", "options": [PLANT]})
+    g = fieldstate.greenness(f["id"])
+    next_steps = {"id": "next", "options": [PLANT, {"value": "limits", "label": "What can't you see?"}]}
+    if not g:
+        return _msg(f"I don't have satellite readings for {f['name']} yet.", f,
+                    detail="No satellite images have been processed for this field.", replies=next_steps)
+    if g.get("too_small"):
+        return _msg(f"{f['name']} is too small for me to read from space.", f,
+                    detail=f"Only {g['squares']} squares of 10 m lie fully inside it, and I need at least {fieldstate.MIN_SQUARES} "
+                           "for a reading I can stand behind. I can still use the weather and the soil map for your area, "
+                           "and the rotation rules.", replies=next_steps)
+    when = f"{g['date']:%d %B}".lstrip("0")
+    if not g["recent"]:
+        return _msg(f"I have no clear satellite image of {f['name']} lately.", f,
+                    detail=f"The last clear one is from the week of {when}. Clouds hide the field from the satellite.", replies=next_steps)
+    z = fieldstate.zones(f["id"])
+    now = f"{f['name']} has {g['words']} now."
+    parts = [f"Sentinel-2 (ESA) measured it in the week of {when}, on {g['squares']} squares of 10 m that lie fully inside the field "
+             f"(greenness index {g['ndvi']})."]
+    if "hls" in g:
+        parts.append(f"NASA's HLS images (30 m, {g['hls']['squares']} squares) show {g['hls']['ndvi']} in the same days.")
+    if z and z["flag"]:
+        text = f"One part of {f['name']} is often less green than the rest."
+        parts.insert(0, now)
+        parts.append(f"{z['weak']} of {z['cells']} squares were at least 10% less green than the middle of the field in "
+                     f"{(z['years'] + 1) // 2} or more of the last {z['years']} growing seasons. They are marked on the map.")
+    else:
+        text = now
+        if z:
+            parts.append(f"No part of the field stands out: in the last {z['years']} growing seasons no area was "
+                         "less green than the rest year after year.")
+    parts.append("A satellite shows how green a field is, not why.")
+    series = fieldstate.month_series(f["id"])
+    return _msg(text, f, detail=" ".join(parts), cards=[{"type": "chart", "series": series}] if series else None, replies=next_steps)
 
 
 # ---------- sourced answers (crop table, soil) ----------
@@ -153,13 +174,44 @@ def _sourced(question, facts, f=None):
     return m
 
 
+# Words that name a crop (English and Romanian, without accents). The model's choice of crop is checked against them:
+# a crop the farmer did not mention is never answered about.
+CROP_WORDS = {
+    "wheat": ["wheat", "grau"], "barley": ["barley", "orz"], "corn": ["corn", "maize", "porumb"],
+    "sunflower": ["sunflower", "sunflowers", "floarea", "soarelui"], "rapeseed": ["rapeseed", "canola", "oilseed", "rapita"],
+    "peas": ["peas", "pea", "mazare"], "soy": ["soy", "soya", "soybean", "soybeans", "soia"],
+}
+NOT_CROPS = {"what", "when", "where", "which", "that", "than", "then", "wheel"}
+
+
+def crops_in(question):
+    """Crops named in the question, allowing a typo or two."""
+    tokens = [t for t in re.findall(r"[a-z]+", _norm(question)) if len(t) >= 3 and t not in NOT_CROPS]
+    def same(token, word):  # short words must match exactly ("prea" is not "pea"); longer ones may have a typo
+        return token == word or (len(word) > 4 and len(token) > 4 and difflib.SequenceMatcher(None, token, word).ratio() >= 0.8)
+    return [cid for cid, words in CROP_WORDS.items() if any(same(t, w) for t in tokens for w in words)]
+
+
+def _check_crops(intent, crop_id, after, question):
+    named = crops_in(question)
+    if crop_id not in named:
+        # With a crop that came before ("rice after wheat") the missing crop may simply not be in the table:
+        # then ask, never answer about the other one.
+        crop_id = named[0] if len(named) == 1 and not (intent == "gap" and after) else None
+    return crop_id, (after if after in named else None)
+
+
 def _knowledge(s, intent, crop_id, after, question):
     if intent == "soil":
         f = field(s["fieldId"])
         return _sourced(question, knowledge.soil(f["id"]), f)
+    if intent == "sowing" and not in_romania():
+        return _msg("I only have sowing dates for southern Romania, not for your area yet.",
+                    detail="Sowing dates depend on the region. The ones in my table come from trials and official guidance in "
+                           "southern Romania, so I will not apply them here.", replies=LIMITS_REPLY)
     if not crop_id:
         s["pending"] = {"intent": intent, "after": after, "question": question}
-        return _msg("Which crop do you mean?", replies={"id": "crop", "options": CROP_REPLIES})
+        return _msg("Which crop do you mean? I only have these seven.", replies={"id": "crop", "options": CROP_REPLIES})
     facts = {"sowing": lambda: knowledge.sowing(crop_id), "heat": lambda: knowledge.heat(crop_id),
              "gap": lambda: knowledge.gap(crop_id, after)}[intent]()
     return _sourced(question, facts)
@@ -185,14 +237,15 @@ def _from_model(s, read, question, weather):
             s["priority"] = read["priority"]
         return None
     if intent == "weather":
-        return _weather(weather)
+        return _weather(weather(s.get("fieldId")))
     if intent == "limits":
         return _limits()
     if intent == "soil":
         s["intent"], s["pending"] = "soil", {"intent": "soil", "after": None, "question": question}
         return None  # _next asks for the field if it is not known
     if intent in ("sowing", "gap", "heat"):
-        return _knowledge(s, intent, read["crop"], read["after"], question)
+        crop_id, after = _check_crops(intent, read["crop"], read["after"], question)
+        return _knowledge(s, intent, crop_id, after, question)
     s.pop("intent", None)
     return _msg("That is outside what I can help with. Here is what I can do.", replies={"id": "intent", "options": [
         PLANT, {"value": "health", "label": "How my fields are doing"}]})
@@ -214,7 +267,7 @@ def _next(s, weather):
     if not s.get("priority"):
         return _msg("What matters most to you?", f, replies={"id": "priority", "options": [
             {"value": "water", "label": "Saving water"}, {"value": "soil", "label": "Healthier soil"}, {"value": "income", "label": "Income"}]})
-    return _rotation(s)
+    return _rotation(s, weather)
 
 
 def _field_list():

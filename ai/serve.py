@@ -10,8 +10,9 @@ this service is off, slow, or returns something that fails its checks.
 """
 from fastapi import FastAPI
 
-import knowledge
-from common import ADAPTER, generate, load, parse_json
+from common import ADAPTER, generate, load, parse_json  # first: it puts ../backend on the import path
+
+import knowledge  # noqa: E402
 from llm_prompts import CROP_IDS, INTENTS, PRIORITIES, SYSTEM_ANSWER, SYSTEM_UNDERSTAND, answer_user, understand_user
 
 app = FastAPI(title="Local language model")
