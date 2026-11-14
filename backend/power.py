@@ -11,39 +11,45 @@ from pathlib import Path
 
 CACHE = Path(__file__).parent / "cache"
 CACHE.mkdir(exist_ok=True)
-PARAMS = "T2M_MAX,T2M_MIN,PRECTOTCORR,GWETROOT"
+PARAMS = "T2M_MAX,T2M_MIN,T2MDEW,WS2M,ALLSKY_SFC_SW_DWN,PRECTOTCORR,GWETROOT"
+NAMES = {"T2M_MAX": "tmax", "T2M_MIN": "tmin", "T2MDEW": "tdew", "WS2M": "wind",
+         "ALLSKY_SFC_SW_DWN": "sun", "PRECTOTCORR": "rain", "GWETROOT": "soil"}
 START = "20010101"
 FILL = -999.0
 MAX_AGE_S = 24 * 3600
 
 
-def _fetch(lat: float, lon: float) -> dict:
+def _fetch(lat: float, lon: float, start: str, end: str) -> dict:
     url = (
         "https://power.larc.nasa.gov/api/temporal/daily/point"
         f"?parameters={PARAMS}&community=AG&longitude={lon}&latitude={lat}"
-        f"&start={START}&end={date.today():%Y%m%d}&format=JSON"
+        f"&start={start}&end={end}&format=JSON"
     )
     req = urllib.request.Request(url, headers={"User-Agent": "field-app-backend"})
     with urllib.request.urlopen(req, timeout=180) as r:
         return json.loads(r.read().decode("utf-8"))["properties"]["parameter"]
 
 
-def load(lat: float, lon: float) -> dict[str, dict[str, float]]:
-    """Returns {"YYYYMMDD": {"tmax":..,"tmin":..,"rain":..,"soil":..}}; missing values are left out."""
-    path = CACHE / f"power_{lat}_{lon}.json"
+def load(lat: float, lon: float, end: str | None = None) -> dict[str, dict[str, float]]:
+    """Returns {"YYYYMMDD": {"tmax":..,"tmin":..,"tdew":..,"wind":..,"sun":..,"rain":..,"soil":..}}.
+
+    Missing values are left out. Without `end` the series runs to today and is refreshed daily;
+    with `end` (a closed period such as "20201231") it is downloaded once and kept.
+    """
+    path = CACHE / f"power7_{lat}_{lon}_{end or 'live'}.json"
     raw = None
-    if path.exists() and time.time() - path.stat().st_mtime < MAX_AGE_S:
+    if path.exists() and (end or time.time() - path.stat().st_mtime < MAX_AGE_S):
         raw = json.loads(path.read_text())
     else:
         try:
-            raw = _fetch(lat, lon)
+            raw = _fetch(lat, lon, START, end or f"{date.today():%Y%m%d}")
             path.write_text(json.dumps(raw))
         except Exception:
             if not path.exists():
                 raise
             raw = json.loads(path.read_text())  # offline: fall back to the last good copy
 
-    names = {"T2M_MAX": "tmax", "T2M_MIN": "tmin", "PRECTOTCORR": "rain", "GWETROOT": "soil"}
+    names = NAMES
     days: dict[str, dict[str, float]] = {}
     for key, name in names.items():
         for day, value in raw[key].items():

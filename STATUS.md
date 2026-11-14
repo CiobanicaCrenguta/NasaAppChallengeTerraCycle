@@ -1,6 +1,6 @@
 # TerraCycle — stadiul proiectului și planul de lucru
 
-Scris pe 13 noiembrie 2026. Termene: sâmbătă 14 noiembrie, ora 12:00 (aplicația rulează pe telefonul de demo) și duminică 15 noiembrie, ora 12:00 (bucla completă pe date reale).
+Scris pe 13 noiembrie 2026. Planul de date a fost actualizat pe 14 noiembrie (secțiunile 3.4, 4.C, 4.G, 4.I, 4.J și 5). Termene: sâmbătă 14 noiembrie, ora 12:00 (aplicația rulează pe telefonul de demo) și duminică 15 noiembrie, ora 12:00 (bucla completă pe date reale).
 
 Cuprins:
 
@@ -18,21 +18,99 @@ Cuprins:
 
 ## 1. Pe scurt
 
-TerraCycle este o aplicație de telefon în care un fermier pune o întrebare despre pământul lui și primește un răspuns direct, bazat pe date NASA. Întrebarea principală este „ce pun la anul?”, adică rotația culturilor.
+Stadiul la 14 noiembrie 2026.
 
-**Ce merge acum:**
+TerraCycle este o aplicație de telefon în care un fermier pune o întrebare despre pământul lui și primește un răspuns direct. Întrebarea principală este „ce pun la anul?”, adică rotația culturilor.
 
-- Aplicația de telefon, cu trei ecrane (Ask, My land, Data) și istoric de întrebări.
-- Un server pe laptop care îi dă aplicației parcelele reale ale echipei și vremea reală din NASA POWER, din 2001 până acum trei zile.
-- Conversația: întrebare → pe care parcelă → ce contează mai mult → recomandare pe trei ani → „Why?”.
+**Cel mai important lucru de știut:** din datele NASA, aplicația folosește acum o singură sursă, NASA POWER (vremea zonei). Recomandarea de rotație în sine nu vine încă din date NASA, ci dintr-un tabel provizoriu de reguli. Celelalte surse NASA au codul de descărcare scris, dar nu au fost încă descărcate.
 
-**Ce nu merge încă:**
+### 1.1 Cum funcționează acum
 
-- Cât de verde e cultura, văzută din satelit. Earth Engine nu e conectat.
-- Regulile de rotație sunt provizorii, nu vin dintr-o sursă agronomică.
-- Numele parcelelor, culturile și istoricul lor sunt inventate. Doar contururile sunt reale.
-- AI-ul local și recunoașterea vocii nu există încă.
-- Nimic nu e salvat în git și nu există încă un APK pentru telefon.
+1. Fermierul deschide aplicația pe ecranul **Ask**. Vede un titlu despre vremea din zonă („It has been dry in your area lately.”) și două casete: ploaia din ultimele 30 de zile și apa din sol.
+2. Scrie o întrebare sau atinge una sugerată. Serverul recunoaște două feluri de întrebări, după cuvinte-cheie: „ce plantez” și „cum îi merge parcelei”.
+3. Dacă îi lipsește ceva, asistentul întreabă, cu răspunsuri la o atingere: pe care parcelă, apoi ce contează mai mult (apă, sol sau venit).
+4. Primește o propoziție („Plant peas on Valea Mare.”) și un card cu planul pe trei ani, cel mult două motive și ce să evite.
+5. „Why?” explică alegerea. Pentru prioritatea „apă”, arată un grafic cu ploaia din iulie din ultimii 10 ani, din NASA POWER.
+6. „What can't you see?” spune ce nu se vede din spațiu: sol tasat, boli și dăunători, drenuri înfundate.
+
+Aplicația nu calculează nimic singură. Trimite întrebarea la server și desenează răspunsul primit.
+
+### 1.2 Ce primește fermierul acum
+
+| Ce | Unde în aplicație | Pe ce se bazează |
+|---|---|---|
+| Starea vremii din zonă, la deschidere | Ask | NASA POWER |
+| Recomandare de rotație pe trei ani, după prioritatea lui | Ask | Tabel provizoriu de reguli + istoricul culturilor (inventat) |
+| Explicația recomandării | Ask, „Why?” | NASA POWER pentru „apă”; reguli generale pentru „sol” și „venit” |
+| Harta parcelelor pe imagine din satelit, cu suprafața fiecăreia | My land | Contururile reale desenate de echipă; fundal Esri |
+| Trei grafice despre zonă: ploaia pe an, temperatura verii, apa din sol | Data | NASA POWER |
+| Lista „ce știu și ce nu știu despre pământul tău” | Data | Scrisă de noi, cu data ultimei zile de date |
+| Întrebările puse până acum | History | Păstrate pe telefon |
+| Răspunsul citit cu voce tare | Ask | Vocea telefonului |
+
+Ce **nu** primește încă: starea culturii pe parcela lui. La întrebarea „cum îi merge parcelei”, asistentul răspunde „I don't have satellite readings for … yet”, iar pe hartă toate parcelele apar cu „No satellite reading yet”.
+
+### 1.3 Datele NASA: ce e folosit și cum
+
+**Folosit acum în aplicație: NASA POWER.** Date zilnice din 1 ianuarie 2001 până acum două-trei zile, pentru un punct din mijlocul parcelelor. Sunt estimări de model pe o grilă de circa 50 km, deci aplicația le etichetează peste tot ca „Estimate for your area”. „De obicei” înseamnă mereu media anilor 2001–2020.
+
+| Parametru | Ce vede fermierul | Cum se calculează |
+|---|---|---|
+| `PRECTOTCORR` (ploaie) | Caseta „Rain in your area, 30 days” și titlul de pe Ask | Suma ultimelor 30 de zile față de media acelorași 30 de zile din 2001–2020. Sub 75% apare „Less than usual” |
+| `PRECTOTCORR` | Graficul „Rain per year” din Data | Suma pe an, ultimii 10 ani; ultimul an față de medie, în procente |
+| `PRECTOTCORR` | Graficul din „Why?” (prioritatea „apă”) | Ploaia din iulie; media ultimilor 5 ani față de media 2001–2020 |
+| `T2M_MAX`, `T2M_MIN` (temperatură) | Graficul „Average temperature, June to August” | Media dintre maxime și minime pe iunie–august, față de medie, în °C |
+| `GWETROOT` (apa din zona rădăcinilor) | Caseta „Water in the soil”: Low, Normal sau High | Media ultimelor 7 zile, așezată printre aceleași 7 zile din cei 20 de ani; treimea de jos e „Low” |
+| `GWETROOT` | Graficul „Water in the root zone” | Media pe lună, anul acesta față de medie; propoziția judecă iulie–septembrie |
+
+Codul: descărcarea în `backend/power.py`, calculele și propozițiile în `backend/analysis.py`.
+
+**Descărcat, dar încă nefolosit de aplicație:**
+
+- NASA POWER pe punctul fiecărei parcele, 2001–2020, adunat pe săptămâni, cu trei parametri în plus (punct de rouă, vânt, radiație solară). Este în `backend/data/baked/<id>/profile.json`. E materia primă pentru rejucarea anilor și calendarul sezonului.
+- SoilGrids (nu e NASA): textura solului, pH și carbon organic.
+
+**Cod scris, date nedescărcate** (așteaptă autentificarea Earth Engine; codul e netestat):
+
+| Sursă NASA | La ce va folosi | Eticheta |
+|---|---|---|
+| HLS (Landsat + Sentinel-2, 30 m) | Cât de verde e parcela față de alți ani: starea parcelei | pe parcelă |
+| MODIS NDVI (250 m) | Cât de verde a fost zona în ultimii 20 de ani | pe zonă |
+| SMAP (~9 km) | Apa din sol, din 2015 | pe zonă |
+| GPM IMERG (~10 km) | Zilele cu ploi torențiale | pe zonă |
+| NASADEM (30 m) | Panta și locurile joase din parcelă | pe parcelă |
+
+Pe lângă NASA: Sentinel-2 (ESA, 10 m), pentru harta zonelor din interiorul parcelei. Detaliile sunt în 4.C și în `README.md`.
+
+### 1.4 Ce e făcut și unde
+
+| Parte | Unde | Stadiu |
+|---|---|---|
+| Ecranele Ask, My land, Data, History | `app/src/app/` | Merg în emulator, pe serverul real |
+| Conversația pe telefon și istoricul | `app/src/conversation.tsx` | Merge |
+| Harta (Leaflet) și graficele | `app/src/components/` | Merg |
+| Legătura cu serverul | `app/src/api.ts` | Merge; singurul loc care alege între server și date de test |
+| Datele de test pentru modul fără server | `app/src/mock/` | Învechite: parcele vechi, texte în română |
+| Adresele serverului | `backend/main.py` | Merg |
+| Parcelele și tabelul de culturi | `backend/store.py`, `backend/fields.json` | Contururi reale; nume, culturi și istoric inventate; tabel provizoriu |
+| Vremea și calculele | `backend/power.py`, `backend/analysis.py` | Merg, pe date reale |
+| Conversația și rotația | `backend/engine.py` | Merge; rotația e pe reguli provizorii |
+| Descărcarea tuturor surselor | `backend/field_pull.py` | POWER și SoilGrids descărcate; restul netestat |
+| Git | depozitul `TerraCycle` | Un commit, urcat pe GitHub; schimbările din 14 noiembrie sunt necomise |
+
+### 1.5 Ce mai trebuie făcut
+
+În ordinea în care se deblochează. Detaliile fiecărui punct sunt în secțiunea 4.
+
+1. **Autentificarea Earth Engine și rularea `field_pull.py`** (4.C). O face proprietarul contului. Deblochează toate sursele NASA în afară de POWER.
+2. **Serverul citește `profile.json`**: starea reală a parcelelor din HLS, graficul „How green the crop is”, nivelurile de parcelă după mărime (secțiunea 5).
+3. **Motorul de rotație cu rejucarea anilor** (4.D): miezul proiectului. Abia aici recomandarea începe să vină din date NASA. Cere un tabel de culturi cu surse.
+4. **Calendarul sezonului** (4.E).
+5. **Build pentru telefon** (4.A) și datele de test aduse la zi (4.B).
+6. **AI-ul local** pentru înțelegerea întrebărilor libere (4.F). Acum sunt doar cuvinte-cheie.
+7. Dacă rămâne timp: harta zonelor (4.I), solul și corecturile fermierului (4.G), scenarii (4.H), panta (4.J).
+
+Lipsesc de la echipă: culturile reale de pe cele patru parcele și valorile pentru tabelul de culturi (secțiunea 9).
 
 ---
 
@@ -133,15 +211,20 @@ Formele exacte ale răspunsurilor sunt în `app/src/types.ts`.
 
 ### 3.4 Datele folosite acum
 
-O singură sursă este conectată: **NASA POWER**, comunitatea AG, date zilnice pentru un punct (mijlocul celor patru parcele, 44,231° N, 23,824° E), din 1 ianuarie 2001.
+Două surse sunt conectate și descărcate: **NASA POWER** și **SoilGrids**. Restul surselor din planul de date (4.C) au codul scris, dar așteaptă autentificarea Earth Engine.
+
+**NASA POWER**, comunitatea AG, date zilnice, din 1 ianuarie 2001. Serverul îl citește pentru un punct (mijlocul celor patru parcele, 44,231° N, 23,824° E); `field_pull.py` îl descarcă și pe punctul fiecărei parcele, pentru 2001–2020.
 
 | Parametru POWER | Ce înseamnă | Folosit pentru |
 |---|---|---|
-| `T2M_MAX`, `T2M_MIN` | Temperatura maximă și minimă la 2 m, °C | Temperatura medie a verii |
+| `T2M_MAX`, `T2M_MIN` | Temperatura maximă și minimă la 2 m, °C | Temperatura medie a verii; arșiță și îngheț în rejucare |
 | `PRECTOTCORR` | Precipitații corectate, mm/zi | Ploaia pe an, pe iulie, pe ultimele 30 de zile |
 | `GWETROOT` | Umezeala solului în zona rădăcinilor, 0–1 | Apa din sol |
+| `T2MDEW`, `WS2M`, `ALLSKY_SFC_SW_DWN` | Punctul de rouă (°C), vântul la 2 m (m/s), radiația solară (MJ/m²/zi) | Descărcate, încă nefolosite: apa cerută de cultură (evapotranspirația de referință) în rejucare |
 
 Meteorologia POWER provine din reanaliza MERRA-2 și din modelul GEOS, pe o grilă de aproximativ 0,5° × 0,625° (circa 50 km). Sunt estimări de model, nu măsurători la sol. Datele ajung cu două-trei zile întârziere. Răspunsul se păstrează pe disc 24 de ore în `backend/cache/`; fără internet, serverul folosește ultima copie.
+
+**SoilGrids 2.0** (ISRIC, 250 m, fără cont): nisip, praf, argilă, pH și carbon organic pe primii 30 cm, pentru punctul fiecărei parcele. Sunt hărți prezise de un model din profile de sol, deci estimări pentru zonă. Valorile descărcate: sol argilos pe toate patru (45–47% argilă; „silty clay” la Dealul Viei și Lunca Jiului, „clay” la Valea Mare și Pădurea Veche), pH 6,6–6,8. Încă nu apar în aplicație.
 
 ### 3.5 Metodele de calcul
 
@@ -217,16 +300,51 @@ Ordinea e cea în care lucrurile se deblochează unul pe altul. „Must” înse
 - **Cum:** parcelele reale și textele noi copiate din `backend/` în `app/src/mock/`; textele românești șterse.
 - **Gata când:** aplicația fără adresă de server arată aceleași parcele ca aplicația cu server.
 
-### C. Earth Engine: cât de verde e cultura — Must
+### C. Datele: descărcate o singură dată cu `field_pull.py` — Must
 
-- **Blocat de:** autentificarea, pe care o face proprietarul contului Google:
+- **Ideea:** toate sursele se descarcă o singură dată per parcelă, se adună pe săptămâni și se salvează în `backend/data/baked/<id parcelă>/profile.json`. Serverul și demo-ul citesc doar fișierele salvate, deci merg și fără internet. Răspunsurile brute rămân în `backend/cache/pull/`, așa că o a doua rulare cere doar ce lipsește.
+- **Săptămânile:** intervale de 7 zile numărate de la 1 ianuarie, 52 pe an (ultima ia și zilele rămase).
+- **Blocat de:** autentificarea Earth Engine, pe care o face proprietarul contului Google:
   ```
   cd backend
   .\.venv\Scripts\earthengine authenticate --auth_mode=localhost
+  .\.venv\Scripts\python.exe field_pull.py
   ```
-  Proiectul este `terracycle-514620`.
-- **Cum:** un modul nou `backend/gee.py`. Detaliile sunt în secțiunea 5.
-- **Gata când:** `/fields` întoarce pentru parcelele mari o stare reală, iar tabul Data are graficul „How green the crop is”.
+  Proiectul este `terracycle-514620`. POWER și SoilGrids nu cer cont și sunt deja descărcate.
+- **Stadiu:** codul e scris pentru toate sursele. Partea Earth Engine nu a putut fi rulată fără autentificare, deci e netestată; ID-urile colecțiilor și numele benzilor au fost verificate în catalogul Earth Engine pe 14 noiembrie.
+
+**Obligatoriu** (calendarul pe 20 de ani și rejucarea):
+
+| Sursă | Colecție sau API | Perioadă | Ce intră în `profile.json` (pe săptămâni) | Eticheta |
+|---|---|---|---|---|
+| NASA POWER | API zilnic, fără cont | 2001–2020 | `tmax`, `tmax_peak`, `tmin`, `tmin_low`, `tdew`, `wind`, `sun`, `rain`, `soil_wetness` | zonă, ~50 km |
+| MODIS NDVI | `MODIS/061/MOD13Q1`, banda `NDVI` × 0,0001, păstrate doar `SummaryQA` 0 și 1 | 2001–2020 | `ndvi_area`: media pătratelor de 250 m care ating parcela | zonă, 250 m |
+| SMAP | `NASA/SMAP/SPL4SMGP/008`, banda `sm_rootzone` | 2015–2020 | `soil_moisture_rootzone` | zonă, ~9 km |
+| GPM IMERG | `NASA/GPM_L3/IMERG_V07`, banda `precipitation` (mm/h, la 30 de minute, adunată pe zile) | 2001–2020 | `rain_day_max`, `heavy_rain_days` (zile cu cel puțin 20 mm) | zonă, ~10 km |
+| NASADEM | `NASA/NASADEM_HGT/001`, banda `elevation`, panta cu `ee.Terrain.slope` | februarie 2000 | panta medie și maximă, altitudinea minimă și maximă; `relief.geojson` | parcelă, 30 m |
+| SoilGrids | API ISRIC, fără cont | static | textură, pH, carbon organic, 0–30 cm | zonă, 250 m |
+
+NASADEM înlocuiește SRTM brut (`USGS/SRTMGL1_003`): e aceeași misiune, reprocesată de NASA, cu mai puține goluri.
+
+**Recomandat** (harta din interiorul parcelei și citirea parcelei):
+
+| Sursă | Colecție | Perioadă | Ce produce | Eticheta |
+|---|---|---|---|---|
+| Sentinel-2 (Copernicus, ESA) | `COPERNICUS/S2_SR_HARMONIZED`, nori scoși cu banda `SCL` (păstrate clasele 4 și 5) | 2017–azi | `ndvi_field_10m` pe săptămâni, săptămânile cu sol gol pe an, `zones.geojson` | parcelă, 10 m, ESA |
+| HLS (NASA) | `NASA/HLS/HLSL30/v002` și `NASA/HLS/HLSS30/v002`, nori scoși cu `Fmask` | 2013–azi | `ndvi_field_30m` pe săptămâni (pașii din 5.4) | parcelă, 30 m |
+
+- **Harta zonelor** (`zones.geojson`): pentru fiecare sezon (aprilie–septembrie), fiecare pătrat de 10 m e comparat cu mediana parcelei din același an. Cultura se schimbă de la an la an, deci păstrăm doar diferența din interiorul parcelei, niciodată nivelul. Un pătrat e „mai slab” într-un an dacă stă cu peste 10% sub mediană; harta arată în câți ani s-a întâmplat.
+- **Sol gol:** săptămânile în care NDVI-ul parcelei e sub 0,25. Intră în recomandarea de rotație (cultură de acoperire).
+- **Relieful** (`relief.geojson`): pătratele de 30 m cu pantă de cel puțin 5° sunt marcate pentru risc de eroziune. Locurile joase (cele mai de jos 10% din diferența de nivel) se marchează doar dacă parcela are cel puțin 5 m diferență de nivel, fiindcă eroarea NASADEM pe verticală e de câțiva metri. „Risc de îngheț în locul jos” e o deducție, nu o măsurătoare: apare doar ca „most likely”.
+- **Împărțirea rolurilor:** MODIS e doar pentru istoricul de 20 de ani al zonei; Sentinel-2 e pentru harta parcelei; HLS e citirea NASA a parcelei.
+
+**Opțional:** FAO GAEZ, ca să scoatem din listă culturile nepotrivite zonei. Nu e în catalogul oficial Earth Engine, deci s-ar descărca separat de pe portalul FAO. Se face doar dacă rămâne timp.
+
+**Nu folosim:** ECOSTRESS (treceri prea rare), GEDI (măsoară păduri), ERA5 și NLDAS/GLDAS (avem deja POWER), și toate sursele care acoperă doar SUA (USDA, SSURGO, CDL, PRISM, NAIP, NLCD, OpenET și celelalte).
+
+Toate pragurile de mai sus (20 mm, 0,25, 5°, 5 m, 10%) sunt alegerea noastră și intră pe lista „de verificat cu un agronom”. Lista surselor, cu versiune și link, este în `README.md`.
+
+- **Gata când:** `profile.json` are `status: ok` la toate sursele pentru toate parcelele, `/fields` întoarce o stare reală, iar tabul Data are graficul „How green the crop is”.
 
 ### D. Motorul de rotație cu „rejucarea” anilor — Must, miezul proiectului
 
@@ -259,18 +377,22 @@ Ordinea e cea în care lucrurile se deblochează unul pe altul. „Must” înse
 - Fermierul poate corecta cultura fiecărui an și poate spune dacă irigă. Totul primește eticheta „you told me”.
 - Trei întrebări puse o singură dată în conversație: irigare, utilaje, ce culturi poate vinde. Culturile imposibile ies din listă.
 - Cere stocare pe server (un fișier JSON per utilizator ajunge pentru demo).
+- **Solul:** dacă SoilGrids are valori pentru parcelă, aplicația le folosește fără să întrebe nimic și le arată ca „Estimate for your area · 250 m”; fermierul le poate corecta. Dacă nu are (`sources.soil.status` e „pending”), asistentul spune „I have no soil data for this place” și pune o singură întrebare cu răspunsuri la o atingere: „Sandy / Loam / Clay / I don't know”. Răspunsul primește eticheta „you told me”. Pentru parcelele noastre există valori, deci întrebarea nu apare.
 
 ### H. Scenarii — Should
 
 - Butoane sub recomandare: „Drier year”, „Hotter year”. Serverul scalează ploaia cu 0,8 sau mută temperatura cu +2 °C și reface rejucarea.
 
-### I. Hartă cu strat NDVI — Should
+### I. Harta zonelor din parcelă — Should
 
-- Strat NASA GIBS peste harta din My land, cu un cursor de dată. Numele exact al stratului de verificat în catalogul GIBS.
+- Un strat nou în harta Leaflet din My land, desenat din `zones.geojson` (Sentinel-2, 10 m): pătratele care au fost mai slabe în mai mulți ani. Serverul le dă printr-o adresă nouă, `GET /fields/{id}/zones`.
+- Textul rămâne despre ce se vede, nu despre cauză: „This part was less green than the rest of the field in 4 of 8 years.” Eticheta: „Measured on your field · 10 m · ESA”.
+- Depinde de C (descărcarea Sentinel-2). Stratul NASA GIBS cu cursor de dată iese din plan.
 
 ### J. Panta terenului — Could
 
-- Din SRTM sau NASADEM prin Earth Engine, un rând la detaliile parcelei.
+- Din NASADEM, prin `field_pull.py` (vezi C): un rând la detaliile parcelei și, pe hartă, pătratele abrupte și locurile joase din `relief.geojson`.
+- La 30 m, o parcelă îngustă are doar câteva pătrate (Lunca Jiului are 71 m lățime), deci la parcelele mici rămâne doar rândul cu panta medie.
 
 ### K. Pagina de limite și comparația de modele — Could
 
@@ -320,24 +442,24 @@ Nivelul se calculează automat din contur, la încărcarea parcelei. Pragurile s
 | Nivel | Condiție | Ce spune aplicația despre cultură | Eticheta din aplicație |
 |---|---|---|---|
 | **A. Citită din satelit** | Cel puțin 10 pătrate curate HLS | Cât de verde e parcela față de anii cu aceeași cultură | „Measured on your field · 30 m” |
-| **B. Citită cu detaliu fin** (opțional) | Sub 10 la HLS, dar cel puțin 10 la Sentinel-2 | La fel, din Sentinel-2 | „Measured on your field · 10 m · ESA” |
+| **B. Citită cu detaliu fin** | Sub 10 la HLS, dar cel puțin 10 la Sentinel-2 | La fel, din Sentinel-2 | „Measured on your field · 10 m · ESA” |
 | **C. Împrejurimi** | Sub pragurile de mai sus | Cât de verde e zona din jur, plus ce spune fermierul | „Around your plot, not your plot” |
 | **D. Fără contur** | Fermierul a pus doar un punct | Vremea din zonă, plus ce spune fermierul | „Estimate for your area” |
 
 Ce primește **fiecare** nivel, fără deosebire: recomandarea de rotație, vremea, calendarul sezonului (fără rândul „verde” la C și D), scenariile.
 
-Aplicat pe parcelele noastre: Valea Mare, Dealul Viei și Pădurea Veche sunt A. Lunca Jiului este B dacă activăm Sentinel-2, altfel C.
+Aplicat pe parcelele noastre: Valea Mare, Dealul Viei și Pădurea Veche sunt A. Lunca Jiului este B (Sentinel-2 e acum în plan).
 
 ### 5.4 Nivelul A: cum se calculează „cât de verde”
 
-Modul nou `backend/gee.py`, rulat o dată per parcelă, cu rezultatul păstrat pe disc.
+Funcția `pull_hls` din `backend/field_pull.py`, rulată o dată per parcelă, cu rezultatul păstrat pe disc.
 
 1. **Colecții** (ID-urile exacte de verificat în catalogul Earth Engine): `NASA/HLS/HLSL30/v002` și `NASA/HLS/HLSS30/v002`.
 2. **Mascare de nori:** se păstrează doar pătratele fără nor, umbră de nor, nor vecin și zăpadă, după banda `Fmask`.
 3. **Indicele de verde (NDVI):** (infraroșu apropiat − roșu) / (infraroșu apropiat + roșu). Benzile diferă între cele două produse (la L30 infraroșul e B5, la S30 e B8A; roșul e B4 la ambele; de verificat).
 4. **Reducere pe parcelă:** media și numărul de pătrate valide, pe conturul micșorat cu 21 m.
 5. **Filtru de calitate:** o dată se păstrează doar dacă cel puțin 70% din pătratele curate sunt valide.
-6. **Serie în timp:** valoarea maximă pe fiecare interval de 16 zile, ca să scăpăm de norii rămași.
+6. **Serie în timp:** valoarea maximă pe fiecare săptămână, ca să scăpăm de norii rămași.
 7. **Referința:** media acelorași intervale din anii în care parcela a avut **aceeași cultură**. Dacă nu există cel puțin doi astfel de ani, aplicația arată curba anului fără nicio comparație.
 8. **Starea parcelei:**
    - „As green as usual”: abaterea medie pe ultimele trei intervale e sub 10%;
@@ -347,13 +469,13 @@ Modul nou `backend/gee.py`, rulat o dată per parcelă, cu rezultatul păstrat p
 
 HLS există din 2013 pentru Landsat și din 2015 pentru Sentinel-2, deci referința are cel mult 11–13 ani.
 
-**Zone în interiorul parcelei** („o parte e mai puțin verde”) rămân în afara planului de mâine. Ar cere cel puțin vreo 100 de pătrate curate și mai multe sezoane, iar parcelele noastre mari au 93. Intră pe slide-ul de „ce urmează”.
+**Zone în interiorul parcelei** („o parte e mai puțin verde”) se fac acum cu Sentinel-2 la 10 m, unde parcelele noastre au între 162 și 1021 de pătrate curate (vezi 4.C și 4.I). Cu HLS la 30 m nu ar fi ajuns: parcelele mari au doar 93.
 
 ### 5.5 Nivelul C: împrejurimi și ochiul fermierului
 
 Două surse care înlocuiesc citirea directă:
 
-1. **Împrejurimile.** NDVI MODIS (`MODIS/061/MOD13Q1`, 250 m, la 16 zile, din 2000) pe un cerc de 1 km în jurul parcelei, comparat cu referința 2001–2020. Propoziția e despre zonă: „Crops around your plot are less green than usual.” Nu spune nimic despre parcela însăși.
+1. **Împrejurimile.** NDVI MODIS (`MODIS/061/MOD13Q1`, 250 m, la 16 zile) pe pătratele care ating parcela, comparat cu referința 2001–2020. Aceeași serie e istoricul de 20 de ani pentru toate parcelele, la orice nivel. Propoziția e despre zonă: „Crops around your plot are less green than usual.” Nu spune nimic despre parcela însăși.
 2. **Fermierul.** O întrebare cu trei răspunsuri, pusă când întreabă de parcelă: „How does the crop look next to last year? Better / Same / Worse”. Răspunsul se păstrează cu data și cu eticheta „you told me” și apare în răspunsurile următoare.
 
 Textul de bază pentru nivelul C: „This plot is too small for satellite images. I use the weather for your area, what grows around you, and what you tell me.”
@@ -368,7 +490,7 @@ Dacă un fermier are mai multe parcele mici lipite, cu aceeași cultură, le put
 |---|---|---|
 | Numărul de pătrate curate și nivelul | `store.py` | Cu `shapely` (deja instalat): contur micșorat, suprafață împărțită la suprafața pătratului |
 | Câmpuri noi la `/fields` | `main.py` | `tier` (A/B/C/D), `cleanPixels`, `sizeLabel` („11.2 ha” sau „35 ares”) |
-| Citirea NDVI | `gee.py` (nou) | Pașii din 5.4 și 5.5, cu cache în `backend/cache/` |
+| Citirea NDVI | `field_pull.py` (scris) | Pașii din 5.4 și 5.5; serverul citește `data/baked/<id>/profile.json` |
 | Starea parcelei | `main.py` | `health` și `healthLabel` din rezultatul NDVI, după nivel |
 | Graficul per parcelă | `analysis.py` | Card „How green the crop is”, cu `scope` „field” sau „around” |
 | Întrebarea pentru parcele mici | `engine.py` | Răspuns nou cu id `look`; răspunsul salvat în `backend/cache/answers.json` |
@@ -409,14 +531,14 @@ Sâmbătă, 14 noiembrie. Orele sunt orientative; ordinea contează.
 | Până la 10:00 | Datele de test aduse la zi (B), apoi pornit build-ul APK | Cont Expo |
 | Până la 12:00 | APK instalat pe telefonul de demo: **primul termen** | Build-ul |
 | În paralel cu build-ul | Nivelurile de parcelă pe server și în aplicație (5.7, 5.8, fără NDVI) | — |
-| După-amiază | `gee.py`: NDVI pentru nivelul A, apoi împrejurimile pentru C | Autentificarea |
+| După-amiază | `field_pull.py` rulat pe toate sursele, apoi serverul citește `profile.json` | Autentificarea |
 | După-amiază | Tabelul de culturi cu surse (cineva din echipă caută valorile) | — |
 | Seara | Motorul cu rejucarea anilor (D) și punctele de încredere pe card | Tabelul de culturi |
 | Seara, dacă rămâne timp | Calendarul sezonului (E) | D și C |
 
 Duminică dimineață, până la 12:00: AI-ul local (F), repetiția demo-ului, înregistrarea video de rezervă.
 
-Ce se taie primul dacă nu ajunge timpul, în ordine: K, J, L, I, H, G, apoi nivelul B.
+Ce se taie primul dacă nu ajunge timpul, în ordine: GAEZ, K, J, L, I, H, G.
 
 ---
 
@@ -465,6 +587,7 @@ Apoi tasta `a` în terminalul Expo.
 
 De știut:
 
+- Descărcarea datelor (o singură dată): `.\.venv\Scripts\python.exe field_pull.py` din `backend/`. Fără Earth Engine: adaugă `--only power,soil`.
 - Serverul nu se reîncarcă singur când schimbi codul Python; se oprește și se pornește din nou.
 - Dacă `npm install` dă eroare de dependențe: `npm install --legacy-peer-deps`.
 - Aplicația fără server: șterge valoarea lui `EXPO_PUBLIC_API_URL` din `app/.env` și repornește Expo.
@@ -474,10 +597,10 @@ De știut:
 
 ## 9. Decizii pe care le așteptăm de la echipă
 
-1. **Git:** facem din `TerraCycle` un depozit separat? Îl urcăm pe GitHub?
+1. **Git:** hotărât. `TerraCycle` e depozit separat, cu GitHub ca `origin`.
 2. **Culturile reale:** ce s-a cultivat pe cele patru parcele în 2024, 2025 și 2026? Fără ele, rotația pleacă de la un istoric inventat și nivelul A nu are „ani cu aceeași cultură”.
 3. **Numele parcelelor:** le păstrăm pe cele inventate sau le punem pe cele adevărate?
-4. **Sentinel-2:** îl folosim pentru nivelul B, etichetat ca satelit european? Tema cere date NASA „împreună cu” alte surse, deci e permis, dar trebuie spus pe ecran.
+4. **Sentinel-2:** hotărât. Îl folosim pentru harta parcelei și pentru nivelul B, etichetat pe ecran ca satelit european; HLS rămâne citirea NASA a parcelei.
 5. **Prioritatea „Income”:** nu avem date de prețuri. O păstrăm ca valoare introdusă de fermier, marcată „not from NASA”, sau o scoatem?
 6. **Cine caută valorile pentru tabelul de culturi** și din ce surse?
 7. **Telefonul de demo:** ce model este și pe ce Wi-Fi va fi la prezentare?
