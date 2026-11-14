@@ -1,0 +1,26 @@
+{
+  "_note": "Geometry is real (drawn by the team). Names, crops and crop history are SAMPLE values until the farmer provides them.",
+  "user": { "name": "Mariana", "region": "Dolj" },
+  "fields": [
+    {
+      "id": "vm", "name": "Valea Mare", "cropId": "sunflower",
+      "history": [{ "year": 2024, "cropId": "corn" }, { "year": 2025, "cropId": "wheat" }, { "year": 2026, "cropId": "sunflower" }],
+      "geometry": { "type": "Polygon", "coordinates": [[[23.8344713, 44.2299423], [23.8399942, 44.2294691], [23.8400891, 44.227243], [23.8346168, 44.2275513], [23.8344713, 44.2299423]]] }
+    },
+    {
+      "id": "dv", "name": "Dealul Viei", "cropId": "corn",
+      "history": [{ "year": 2024, "cropId": "sunflower" }, { "year": 2025, "cropId": "corn" }, { "year": 2026, "cropId": "corn" }],
+      "geometry": { "type": "Polygon", "coordinates": [[[23.8114317, 44.238724], [23.8123404, 44.2360791], [23.8149743, 44.236547], [23.8139118, 44.2391153], [23.8114317, 44.238724]]] }
+    },
+    {
+      "id": "lj", "name": "Lunca Jiului", "cropId": "wheat",
+      "history": [{ "year": 2024, "cropId": "corn" }, { "year": 2025, "cropId": "rapeseed" }, { "year": 2026, "cropId": "wheat" }],
+      "geometry": { "type": "Polygon", "coordinates": [[[23.8083213, 44.2306891], [23.8120948, 44.2314715], [23.812405, 44.2309206], [23.8086509, 44.2300872], [23.8083213, 44.2306891]]] }
+    },
+    {
+      "id": "pv", "name": "Pădurea Veche", "cropId": "rapeseed",
+      "history": [{ "year": 2024, "cropId": "sunflower" }, { "year": 2025, "cropId": "wheat" }, { "year": 2026, "cropId": "rapeseed" }],
+      "geometry": { "type": "Polygon", "coordinates": [[[23.8346057, 44.2275503], [23.8400085, 44.2271617], [23.8400904, 44.2245366], [23.838709, 44.2247419], [23.837522, 44.2251012], [23.8365806, 44.2249692], [23.8356495, 44.2250792], [23.8353118, 44.2251746], [23.8351174, 44.2255265], [23.8348922, 44.2257245], [23.8348206, 44.2257758], [23.8346876, 44.2265018], [23.8346876, 44.226927], [23.8347081, 44.2271837], [23.8346057, 44.2275503]]] }
+    }
+  ]
+}
