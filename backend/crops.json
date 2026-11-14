@@ -1,0 +1,1395 @@
+{
+ "_note": "Every value has the form {value, unit, source, locator, status}. 'source' is an id in SOURCES.md. status is 'verificat' (the source was opened and the figure read in it) or 'de_confirmat'. A parameter with no source is null and listed in MISSING.md; the engine must skip it. Run 'python -m unittest test_crops' to check the file.",
+ "crops": [
+  {
+   "id": "wheat",
+   "name": "Winter wheat",
+   "family": "cereal",
+   "water": {
+    "kc_ini": {
+     "value": 0.4,
+     "unit": "coefficient",
+     "source": "S13",
+     "locator": "Chapter 6, Table 12, row 'Winter Wheat, with frozen soils'",
+     "status": "verificat"
+    },
+    "kc_mid": {
+     "value": 1.15,
+     "unit": "coefficient",
+     "source": "S13",
+     "locator": "Chapter 6, Table 12, row 'Winter Wheat, with frozen soils'",
+     "status": "verificat"
+    },
+    "kc_end": {
+     "value": 0.25,
+     "unit": "coefficient",
+     "source": "S13",
+     "locator": "Chapter 6, Table 12, row 'Winter Wheat, with frozen soils'",
+     "status": "verificat",
+     "note": "0.25 for machine harvest; 0.4 for hand harvest."
+    },
+    "stage_days": {
+     "ini": {
+      "value": 160,
+      "unit": "days",
+      "source": "S13",
+      "locator": "Chapter 6, Table 11, row 'Winter Wheat', region 'Idaho, USA', planting October",
+      "status": "verificat",
+      "note": "Row for another region of the world; FAO-56 has no row for Romania."
+     },
+     "dev": {
+      "value": 75,
+      "unit": "days",
+      "source": "S13",
+      "locator": "Chapter 6, Table 11, row 'Winter Wheat', region 'Idaho, USA', planting October",
+      "status": "verificat"
+     },
+     "mid": {
+      "value": 75,
+      "unit": "days",
+      "source": "S13",
+      "locator": "Chapter 6, Table 11, row 'Winter Wheat', region 'Idaho, USA', planting October",
+      "status": "verificat"
+     },
+     "late": {
+      "value": 25,
+      "unit": "days",
+      "source": "S13",
+      "locator": "Chapter 6, Table 11, row 'Winter Wheat', region 'Idaho, USA', planting October",
+      "status": "verificat"
+     },
+     "total": {
+      "value": 335,
+      "unit": "days",
+      "source": "S13",
+      "locator": "Chapter 6, Table 11, row 'Winter Wheat', region 'Idaho, USA', planting October",
+      "status": "verificat"
+     }
+    }
+   },
+   "requirements": {
+    "scientific_name": "Triticum aestivum",
+    "temp_optimal": {
+     "value": [
+      15,
+      23
+     ],
+     "unit": "°C",
+     "source": "S14",
+     "locator": "record 'Triticum aestivum', EcoPort code 2114, fields TOPMN-TOPMX",
+     "status": "verificat"
+    },
+    "temp_absolute": {
+     "value": [
+      5,
+      27
+     ],
+     "unit": "°C",
+     "source": "S14",
+     "locator": "record 'Triticum aestivum', EcoPort code 2114, fields TMIN-TMAX",
+     "status": "verificat"
+    },
+    "rain_optimal": {
+     "value": [
+      750,
+      900
+     ],
+     "unit": "mm/year",
+     "source": "S14",
+     "locator": "record 'Triticum aestivum', EcoPort code 2114, fields ROPMN-ROPMX",
+     "status": "verificat"
+    },
+    "rain_absolute": {
+     "value": [
+      300,
+      1600
+     ],
+     "unit": "mm/year",
+     "source": "S14",
+     "locator": "record 'Triticum aestivum', EcoPort code 2114, fields RMIN-RMAX",
+     "status": "verificat"
+    },
+    "ph_optimal": {
+     "value": [
+      6,
+      7
+     ],
+     "unit": "pH",
+     "source": "S14",
+     "locator": "record 'Triticum aestivum', EcoPort code 2114, fields PHOPMN-PHOPMX",
+     "status": "verificat"
+    },
+    "ph_absolute": {
+     "value": [
+      5.5,
+      8.5
+     ],
+     "unit": "pH",
+     "source": "S14",
+     "locator": "record 'Triticum aestivum', EcoPort code 2114, fields PHMIN-PHMAX",
+     "status": "verificat"
+    },
+    "killing_temp_rest": {
+     "value": -20,
+     "unit": "°C",
+     "source": "S14",
+     "locator": "record 'Triticum aestivum', EcoPort code 2114, field KTMPR",
+     "status": "verificat"
+    },
+    "killing_temp_early_growth": {
+     "value": 0,
+     "unit": "°C",
+     "source": "S14",
+     "locator": "record 'Triticum aestivum', EcoPort code 2114, field KTMP",
+     "status": "verificat"
+    },
+    "cycle_length": {
+     "value": [
+      90,
+      250
+     ],
+     "unit": "days",
+     "source": "S14",
+     "locator": "record 'Triticum aestivum', EcoPort code 2114, fields GMIN-GMAX",
+     "status": "verificat"
+    },
+    "soil_texture_optimal": {
+     "value": "medium, organic",
+     "unit": "text",
+     "source": "S14",
+     "locator": "record 'Triticum aestivum', EcoPort code 2114, field TEXT",
+     "status": "verificat"
+    },
+    "soil_texture_absolute": {
+     "value": "heavy, medium",
+     "unit": "text",
+     "source": "S14",
+     "locator": "record 'Triticum aestivum', EcoPort code 2114, field TEXTR",
+     "status": "verificat"
+    }
+   },
+   "sowing": {
+    "window": {
+     "value": "late September to late October",
+     "unit": "calendar",
+     "source": "S1",
+     "locator": "p. 11",
+     "status": "verificat"
+    },
+    "best_window": {
+     "value": "10 to 25 October",
+     "unit": "calendar",
+     "source": "S2",
+     "locator": "abstract, p. 653; conclusions, p. 659",
+     "status": "verificat",
+     "days": [
+      "10-10",
+      "10-25"
+     ],
+     "note": "Fundulea, 2022-2024. Sowing on 25 September or 1 November reduced yield."
+    },
+    "engine_uses": "best_window (S2): it lies inside the S1 window and comes from a field trial in southern Romania."
+   },
+   "rotation": {
+    "max_years_after_itself": {
+     "value": 1,
+     "unit": "years",
+     "source": "S1",
+     "locator": "p. 8, 'Condiții minimale de cultivare'",
+     "status": "verificat",
+     "note": "Only in extreme cases, with special protection against wheat pathogens and pests."
+    },
+    "min_gap_years": null
+   },
+   "heat_at_flowering": {
+    "attention": {
+     "value": 31,
+     "unit": "°C",
+     "source": "S10",
+     "locator": "Table 1, p. 586, row Tmax, column Anthesis",
+     "status": "de_confirmat",
+     "note": "The figure is in S10 as printed, taken from Porter and Gawith 1999, which was not opened. It is a cardinal temperature for the anthesis phase, not a rule about daily maximum temperature."
+    },
+    "loss": {
+     "value": 35,
+     "unit": "°C",
+     "source": "S12",
+     "locator": "Annex I, section 4.2, 'Maximum air temperature above which pollination starts to fail (heat stress)', I.10 Wheat, p. 42",
+     "status": "verificat",
+     "note": "Marked 'Estimate' by the authors."
+    }
+   }
+  },
+  {
+   "id": "barley",
+   "name": "Winter barley",
+   "family": "cereal",
+   "water": {
+    "kc_ini": {
+     "value": 0.3,
+     "unit": "coefficient",
+     "source": "S13",
+     "locator": "Chapter 6, Table 12, group value 'i. Cereals'",
+     "status": "verificat"
+    },
+    "kc_mid": {
+     "value": 1.15,
+     "unit": "coefficient",
+     "source": "S13",
+     "locator": "Chapter 6, Table 12, row 'Barley'",
+     "status": "verificat"
+    },
+    "kc_end": {
+     "value": 0.25,
+     "unit": "coefficient",
+     "source": "S13",
+     "locator": "Chapter 6, Table 12, row 'Barley'",
+     "status": "verificat"
+    },
+    "stage_days": {
+     "ini": null,
+     "dev": null,
+     "mid": null,
+     "late": null,
+     "total": null
+    }
+   },
+   "requirements": {
+    "scientific_name": "Hordeum vulgare",
+    "temp_optimal": {
+     "value": [
+      15,
+      20
+     ],
+     "unit": "°C",
+     "source": "S14",
+     "locator": "record 'Hordeum vulgare', EcoPort code 1232, fields TOPMN-TOPMX",
+     "status": "verificat"
+    },
+    "temp_absolute": {
+     "value": [
+      2,
+      40
+     ],
+     "unit": "°C",
+     "source": "S14",
+     "locator": "record 'Hordeum vulgare', EcoPort code 1232, fields TMIN-TMAX",
+     "status": "verificat"
+    },
+    "rain_optimal": {
+     "value": [
+      500,
+      1000
+     ],
+     "unit": "mm/year",
+     "source": "S14",
+     "locator": "record 'Hordeum vulgare', EcoPort code 1232, fields ROPMN-ROPMX",
+     "status": "verificat"
+    },
+    "rain_absolute": {
+     "value": [
+      200,
+      2000
+     ],
+     "unit": "mm/year",
+     "source": "S14",
+     "locator": "record 'Hordeum vulgare', EcoPort code 1232, fields RMIN-RMAX",
+     "status": "verificat"
+    },
+    "ph_optimal": {
+     "value": [
+      6.5,
+      7.5
+     ],
+     "unit": "pH",
+     "source": "S14",
+     "locator": "record 'Hordeum vulgare', EcoPort code 1232, fields PHOPMN-PHOPMX",
+     "status": "verificat"
+    },
+    "ph_absolute": {
+     "value": [
+      6,
+      8
+     ],
+     "unit": "pH",
+     "source": "S14",
+     "locator": "record 'Hordeum vulgare', EcoPort code 1232, fields PHMIN-PHMAX",
+     "status": "verificat"
+    },
+    "killing_temp_rest": {
+     "value": -4,
+     "unit": "°C",
+     "source": "S14",
+     "locator": "record 'Hordeum vulgare', EcoPort code 1232, field KTMPR",
+     "status": "verificat"
+    },
+    "killing_temp_early_growth": {
+     "value": 0,
+     "unit": "°C",
+     "source": "S14",
+     "locator": "record 'Hordeum vulgare', EcoPort code 1232, field KTMP",
+     "status": "verificat"
+    },
+    "cycle_length": {
+     "value": [
+      90,
+      240
+     ],
+     "unit": "days",
+     "source": "S14",
+     "locator": "record 'Hordeum vulgare', EcoPort code 1232, fields GMIN-GMAX",
+     "status": "verificat"
+    },
+    "soil_texture_optimal": {
+     "value": "medium",
+     "unit": "text",
+     "source": "S14",
+     "locator": "record 'Hordeum vulgare', EcoPort code 1232, field TEXT",
+     "status": "verificat"
+    },
+    "soil_texture_absolute": {
+     "value": "heavy, medium, light",
+     "unit": "text",
+     "source": "S14",
+     "locator": "record 'Hordeum vulgare', EcoPort code 1232, field TEXTR",
+     "status": "verificat"
+    }
+   },
+   "sowing": {
+    "window": {
+     "value": "first ten days of October",
+     "unit": "calendar",
+     "source": "S1",
+     "locator": "p. 11",
+     "status": "verificat",
+     "days": [
+      "10-01",
+      "10-10"
+     ]
+    }
+   },
+   "rotation": {
+    "min_gap_years": null,
+    "may_follow": {
+     "value": [
+      "wheat"
+     ],
+     "unit": "crops",
+     "source": "S1",
+     "locator": "p. 8, 'Orzul se poate semăna după grâu'",
+     "status": "verificat"
+    }
+   },
+   "heat_at_flowering": {
+    "attention": null,
+    "loss": {
+     "value": 35,
+     "unit": "°C",
+     "source": "S12",
+     "locator": "Annex I, section 4.2, 'Maximum air temperature above which pollination starts to fail (heat stress)', I.11 Barley, p. 46",
+     "status": "verificat"
+    }
+   }
+  },
+  {
+   "id": "corn",
+   "name": "Corn",
+   "family": "maize",
+   "water": {
+    "kc_ini": {
+     "value": 0.3,
+     "unit": "coefficient",
+     "source": "S13",
+     "locator": "Chapter 6, Table 12, group value 'i. Cereals'",
+     "status": "verificat"
+    },
+    "kc_mid": {
+     "value": 1.2,
+     "unit": "coefficient",
+     "source": "S13",
+     "locator": "Chapter 6, Table 12, row 'Maize, Field (grain)'",
+     "status": "verificat"
+    },
+    "kc_end": {
+     "value": 0.35,
+     "unit": "coefficient",
+     "source": "S13",
+     "locator": "Chapter 6, Table 12, row 'Maize, Field (grain)'",
+     "status": "verificat",
+     "note": "0.35 for grain dried in the field; 0.60 for harvest at high grain moisture."
+    },
+    "stage_days": {
+     "ini": {
+      "value": 30,
+      "unit": "days",
+      "source": "S13",
+      "locator": "Chapter 6, Table 11, row 'Maize (grain)', region 'Idaho, USA', planting April",
+      "status": "verificat",
+      "note": "Row for another region of the world; FAO-56 has no row for Romania."
+     },
+     "dev": {
+      "value": 40,
+      "unit": "days",
+      "source": "S13",
+      "locator": "Chapter 6, Table 11, row 'Maize (grain)', region 'Idaho, USA', planting April",
+      "status": "verificat"
+     },
+     "mid": {
+      "value": 50,
+      "unit": "days",
+      "source": "S13",
+      "locator": "Chapter 6, Table 11, row 'Maize (grain)', region 'Idaho, USA', planting April",
+      "status": "verificat"
+     },
+     "late": {
+      "value": 50,
+      "unit": "days",
+      "source": "S13",
+      "locator": "Chapter 6, Table 11, row 'Maize (grain)', region 'Idaho, USA', planting April",
+      "status": "verificat"
+     },
+     "total": {
+      "value": 170,
+      "unit": "days",
+      "source": "S13",
+      "locator": "Chapter 6, Table 11, row 'Maize (grain)', region 'Idaho, USA', planting April",
+      "status": "verificat"
+     }
+    }
+   },
+   "requirements": {
+    "scientific_name": "Zea mays",
+    "temp_optimal": {
+     "value": [
+      18,
+      33
+     ],
+     "unit": "°C",
+     "source": "S14",
+     "locator": "record 'Zea mays', EcoPort code 2175, fields TOPMN-TOPMX",
+     "status": "verificat"
+    },
+    "temp_absolute": {
+     "value": [
+      10,
+      47
+     ],
+     "unit": "°C",
+     "source": "S14",
+     "locator": "record 'Zea mays', EcoPort code 2175, fields TMIN-TMAX",
+     "status": "verificat"
+    },
+    "rain_optimal": {
+     "value": [
+      600,
+      1200
+     ],
+     "unit": "mm/year",
+     "source": "S14",
+     "locator": "record 'Zea mays', EcoPort code 2175, fields ROPMN-ROPMX",
+     "status": "verificat"
+    },
+    "rain_absolute": {
+     "value": [
+      400,
+      1800
+     ],
+     "unit": "mm/year",
+     "source": "S14",
+     "locator": "record 'Zea mays', EcoPort code 2175, fields RMIN-RMAX",
+     "status": "verificat"
+    },
+    "ph_optimal": {
+     "value": [
+      5,
+      7
+     ],
+     "unit": "pH",
+     "source": "S14",
+     "locator": "record 'Zea mays', EcoPort code 2175, fields PHOPMN-PHOPMX",
+     "status": "verificat"
+    },
+    "ph_absolute": {
+     "value": [
+      4.5,
+      8.5
+     ],
+     "unit": "pH",
+     "source": "S14",
+     "locator": "record 'Zea mays', EcoPort code 2175, fields PHMIN-PHMAX",
+     "status": "verificat"
+    },
+    "killing_temp_rest": null,
+    "killing_temp_early_growth": null,
+    "cycle_length": {
+     "value": [
+      65,
+      365
+     ],
+     "unit": "days",
+     "source": "S14",
+     "locator": "record 'Zea mays', EcoPort code 2175, fields GMIN-GMAX",
+     "status": "verificat"
+    },
+    "soil_texture_optimal": null,
+    "soil_texture_absolute": null
+   },
+   "sowing": {
+    "window": {
+     "value": "1 April, 15 April and 1 May tested; highest three-year mean yield at 15 April",
+     "unit": "calendar",
+     "source": "S4",
+     "locator": "Table 2, p. 511 (average SD I 4.70, SD II 7.40, SD III 4.20 t/ha)",
+     "status": "de_confirmat",
+     "days": [
+      "04-01",
+      "05-01"
+     ],
+     "note": "A trial result (Fundulea, 2018-2020), not a recommendation. The text names 1 April as best in the normal year 2019. Needs a recommendation from an agronomist or an official guide."
+    }
+   },
+   "rotation": {
+    "min_gap_years": null,
+    "self_tolerant": {
+     "value": true,
+     "unit": "yes/no",
+     "source": "S7",
+     "locator": "section 'In maize': 'corn is a self-tolerant crop'",
+     "status": "verificat"
+    }
+   },
+   "heat_at_flowering": {
+    "attention": {
+     "value": 35,
+     "unit": "°C",
+     "source": "S10",
+     "locator": "section 3.1 'Maize', p. 585: 'temperatures of above 35 °C are lethal to maize pollen viability'",
+     "status": "verificat",
+     "note": "Luo cites Herrero and Johnson 1980, Schoper et al. 1987, Dupuis and Dumas 1990. S9 (section 1.2, p. 5) is given for the same figure but its full text could not be opened."
+    },
+    "loss": {
+     "value": 40,
+     "unit": "°C",
+     "source": "S12",
+     "locator": "Annex I, section 4.2, 'Maximum air temperature above which pollination starts to fail (heat stress)', I.2 Maize, p. 10",
+     "status": "verificat",
+     "note": "Marked 'Estimate' by the authors."
+    }
+   }
+  },
+  {
+   "id": "sunflower",
+   "name": "Sunflower",
+   "family": "aster",
+   "water": {
+    "kc_ini": {
+     "value": 0.35,
+     "unit": "coefficient",
+     "source": "S13",
+     "locator": "Chapter 6, Table 12, group value 'h. Oil Crops'",
+     "status": "verificat"
+    },
+    "kc_mid": {
+     "value": 1.0,
+     "unit": "coefficient",
+     "source": "S13",
+     "locator": "Chapter 6, Table 12, row 'Sunflower'",
+     "status": "verificat",
+     "note": "1.0 is the value for rainfed crops; 1.15 for dense, irrigated stands (table footnote 9)."
+    },
+    "kc_end": {
+     "value": 0.35,
+     "unit": "coefficient",
+     "source": "S13",
+     "locator": "Chapter 6, Table 12, row 'Sunflower'",
+     "status": "verificat"
+    },
+    "stage_days": {
+     "ini": {
+      "value": 25,
+      "unit": "days",
+      "source": "S13",
+      "locator": "Chapter 6, Table 11, row 'Sunflower', region 'Medit.; California', planting April/May",
+      "status": "verificat",
+      "note": "Row for another region of the world; FAO-56 has no row for Romania."
+     },
+     "dev": {
+      "value": 35,
+      "unit": "days",
+      "source": "S13",
+      "locator": "Chapter 6, Table 11, row 'Sunflower', region 'Medit.; California', planting April/May",
+      "status": "verificat"
+     },
+     "mid": {
+      "value": 45,
+      "unit": "days",
+      "source": "S13",
+      "locator": "Chapter 6, Table 11, row 'Sunflower', region 'Medit.; California', planting April/May",
+      "status": "verificat"
+     },
+     "late": {
+      "value": 25,
+      "unit": "days",
+      "source": "S13",
+      "locator": "Chapter 6, Table 11, row 'Sunflower', region 'Medit.; California', planting April/May",
+      "status": "verificat"
+     },
+     "total": {
+      "value": 130,
+      "unit": "days",
+      "source": "S13",
+      "locator": "Chapter 6, Table 11, row 'Sunflower', region 'Medit.; California', planting April/May",
+      "status": "verificat"
+     }
+    }
+   },
+   "requirements": {
+    "scientific_name": "Helianthus annuus",
+    "temp_optimal": {
+     "value": [
+      17,
+      34
+     ],
+     "unit": "°C",
+     "source": "S14",
+     "locator": "record 'Helianthus annuus', EcoPort code 1191, fields TOPMN-TOPMX",
+     "status": "verificat"
+    },
+    "temp_absolute": {
+     "value": [
+      5,
+      45
+     ],
+     "unit": "°C",
+     "source": "S14",
+     "locator": "record 'Helianthus annuus', EcoPort code 1191, fields TMIN-TMAX",
+     "status": "verificat"
+    },
+    "rain_optimal": {
+     "value": [
+      600,
+      1000
+     ],
+     "unit": "mm/year",
+     "source": "S14",
+     "locator": "record 'Helianthus annuus', EcoPort code 1191, fields ROPMN-ROPMX",
+     "status": "verificat"
+    },
+    "rain_absolute": {
+     "value": [
+      300,
+      1600
+     ],
+     "unit": "mm/year",
+     "source": "S14",
+     "locator": "record 'Helianthus annuus', EcoPort code 1191, fields RMIN-RMAX",
+     "status": "verificat"
+    },
+    "ph_optimal": {
+     "value": [
+      6,
+      7.5
+     ],
+     "unit": "pH",
+     "source": "S14",
+     "locator": "record 'Helianthus annuus', EcoPort code 1191, fields PHOPMN-PHOPMX",
+     "status": "verificat"
+    },
+    "ph_absolute": {
+     "value": [
+      5.5,
+      8
+     ],
+     "unit": "pH",
+     "source": "S14",
+     "locator": "record 'Helianthus annuus', EcoPort code 1191, fields PHMIN-PHMAX",
+     "status": "verificat"
+    },
+    "killing_temp_rest": {
+     "value": -10,
+     "unit": "°C",
+     "source": "S14",
+     "locator": "record 'Helianthus annuus', EcoPort code 1191, field KTMPR",
+     "status": "verificat"
+    },
+    "killing_temp_early_growth": {
+     "value": 0,
+     "unit": "°C",
+     "source": "S14",
+     "locator": "record 'Helianthus annuus', EcoPort code 1191, field KTMP",
+     "status": "verificat"
+    },
+    "cycle_length": {
+     "value": [
+      70,
+      200
+     ],
+     "unit": "days",
+     "source": "S14",
+     "locator": "record 'Helianthus annuus', EcoPort code 1191, fields GMIN-GMAX",
+     "status": "verificat"
+    },
+    "soil_texture_optimal": {
+     "value": "medium, light",
+     "unit": "text",
+     "source": "S14",
+     "locator": "record 'Helianthus annuus', EcoPort code 1191, field TEXT",
+     "status": "verificat"
+    },
+    "soil_texture_absolute": {
+     "value": "heavy, medium, light",
+     "unit": "text",
+     "source": "S14",
+     "locator": "record 'Helianthus annuus', EcoPort code 1191, field TEXTR",
+     "status": "verificat"
+    }
+   },
+   "sowing": {
+    "window": {
+     "value": "10 to 15 April",
+     "unit": "calendar",
+     "source": "S3",
+     "locator": "p. 63, 'sowing time'",
+     "status": "verificat",
+     "days": [
+      "04-10",
+      "04-15"
+     ],
+     "note": "Fundulea, 1990-1999, dryland: highest seed yield of the three sowing times tested (10-15 April, 1-5 May, 20-25 May). The abstract words it as 'first decade of April'."
+    }
+   },
+   "rotation": {
+    "min_gap_years": {
+     "value": [
+      4,
+      5
+     ],
+     "unit": "years",
+     "source": "S6",
+     "locator": "table p. 8 ('Intervalul de cultivare': 4-5 ani); p. 22 recommends 5 years",
+     "status": "verificat",
+     "engine_value": 5,
+     "engine_note": "5 years: named in both places in S6."
+    },
+    "min_gap_from_other_hosts": {
+     "value": 3,
+     "unit": "years",
+     "source": "S6",
+     "locator": "p. 22",
+     "status": "verificat",
+     "hosts": [
+      "rapeseed",
+      "soy",
+      "beans"
+     ],
+     "note": "Other hosts of Sclerotinia. S6 also lists radish, turnip and wild crucifers."
+    }
+   },
+   "heat_at_flowering": {
+    "attention": null,
+    "loss": {
+     "value": 40,
+     "unit": "°C",
+     "source": "S12",
+     "locator": "Annex I, section 4.2, 'Maximum air temperature above which pollination starts to fail (heat stress)', I.8 Sunflower, p. 34",
+     "status": "verificat"
+    }
+   }
+  },
+  {
+   "id": "rapeseed",
+   "name": "Rapeseed",
+   "family": "brassica",
+   "water": {
+    "kc_ini": {
+     "value": 0.35,
+     "unit": "coefficient",
+     "source": "S13",
+     "locator": "Chapter 6, Table 12, group value 'h. Oil Crops'",
+     "status": "verificat"
+    },
+    "kc_mid": {
+     "value": 1.0,
+     "unit": "coefficient",
+     "source": "S13",
+     "locator": "Chapter 6, Table 12, row 'Rapeseed, Canola'",
+     "status": "verificat",
+     "note": "1.0 is the value for rainfed crops; 1.15 for dense, irrigated stands (table footnote 9)."
+    },
+    "kc_end": {
+     "value": 0.35,
+     "unit": "coefficient",
+     "source": "S13",
+     "locator": "Chapter 6, Table 12, row 'Rapeseed, Canola'",
+     "status": "verificat"
+    },
+    "stage_days": {
+     "ini": null,
+     "dev": null,
+     "mid": null,
+     "late": null,
+     "total": null
+    }
+   },
+   "requirements": {
+    "scientific_name": "Brassica napus",
+    "temp_optimal": {
+     "value": [
+      15,
+      25
+     ],
+     "unit": "°C",
+     "source": "S14",
+     "locator": "record 'Brassica napus', EcoPort code 549, fields TOPMN-TOPMX",
+     "status": "verificat"
+    },
+    "temp_absolute": {
+     "value": [
+      5,
+      41
+     ],
+     "unit": "°C",
+     "source": "S14",
+     "locator": "record 'Brassica napus', EcoPort code 549, fields TMIN-TMAX",
+     "status": "verificat"
+    },
+    "rain_optimal": {
+     "value": [
+      500,
+      1000
+     ],
+     "unit": "mm/year",
+     "source": "S14",
+     "locator": "record 'Brassica napus', EcoPort code 549, fields ROPMN-ROPMX",
+     "status": "verificat"
+    },
+    "rain_absolute": {
+     "value": [
+      400,
+      2800
+     ],
+     "unit": "mm/year",
+     "source": "S14",
+     "locator": "record 'Brassica napus', EcoPort code 549, fields RMIN-RMAX",
+     "status": "verificat"
+    },
+    "ph_optimal": {
+     "value": [
+      6.5,
+      7.6
+     ],
+     "unit": "pH",
+     "source": "S14",
+     "locator": "record 'Brassica napus', EcoPort code 549, fields PHOPMN-PHOPMX",
+     "status": "verificat"
+    },
+    "ph_absolute": {
+     "value": [
+      5.5,
+      8
+     ],
+     "unit": "pH",
+     "source": "S14",
+     "locator": "record 'Brassica napus', EcoPort code 549, fields PHMIN-PHMAX",
+     "status": "verificat"
+    },
+    "killing_temp_rest": {
+     "value": -15,
+     "unit": "°C",
+     "source": "S14",
+     "locator": "record 'Brassica napus', EcoPort code 549, field KTMPR",
+     "status": "verificat"
+    },
+    "killing_temp_early_growth": {
+     "value": -6,
+     "unit": "°C",
+     "source": "S14",
+     "locator": "record 'Brassica napus', EcoPort code 549, field KTMP",
+     "status": "verificat"
+    },
+    "cycle_length": {
+     "value": [
+      85,
+      340
+     ],
+     "unit": "days",
+     "source": "S14",
+     "locator": "record 'Brassica napus', EcoPort code 549, fields GMIN-GMAX",
+     "status": "verificat"
+    },
+    "soil_texture_optimal": {
+     "value": "medium, light",
+     "unit": "text",
+     "source": "S14",
+     "locator": "record 'Brassica napus', EcoPort code 549, field TEXT",
+     "status": "verificat"
+    },
+    "soil_texture_absolute": {
+     "value": "heavy, medium, light",
+     "unit": "text",
+     "source": "S14",
+     "locator": "record 'Brassica napus', EcoPort code 549, field TEXTR",
+     "status": "verificat"
+    }
+   },
+   "sowing": {
+    "window": {
+     "value": "late August to early September",
+     "unit": "calendar",
+     "source": "S1",
+     "locator": "p. 10, 'Epoca de semănat'",
+     "status": "verificat"
+    }
+   },
+   "rotation": {
+    "min_gap_years": {
+     "value": [
+      3,
+      5
+     ],
+     "unit": "years",
+     "source": "S6",
+     "locator": "table p. 8 (3-4 ani); p. 11 (4-5 ani between crucifers, cover crops included)",
+     "status": "verificat",
+     "engine_value": 4,
+     "engine_note": "4 years: inside both S6 ranges and above the S7 minimum of 3."
+    },
+    "min_gap_years_minimum": {
+     "value": 3,
+     "unit": "years",
+     "source": "S7",
+     "locator": "section 'In oilseed rape': 'a break of at least 3 years is recommended'",
+     "status": "verificat"
+    },
+    "avoid_after": {
+     "value": [
+      "sunflower",
+      "soy",
+      "beans",
+      "mustard"
+     ],
+     "unit": "crops",
+     "source": "S1",
+     "locator": "p. 8",
+     "status": "verificat",
+     "note": "Because of white mould (Sclerotinia sclerotiorum) and shared pests. S1 also lists chickpea."
+    }
+   },
+   "heat_at_flowering": {
+    "attention": {
+     "value": 30,
+     "unit": "°C",
+     "source": "S11",
+     "locator": "Table 1, row 'Rapeseed (Brassica napus L.)': 'About 30 °C for flowering'",
+     "status": "verificat",
+     "note": "Secondary source; the table cites Koscielny et al. 2018."
+    },
+    "loss": null
+   }
+  },
+  {
+   "id": "peas",
+   "name": "Peas",
+   "family": "legume",
+   "water": {
+    "kc_ini": {
+     "value": 0.4,
+     "unit": "coefficient",
+     "source": "S13",
+     "locator": "Chapter 6, Table 12, group value 'e. Legumes'",
+     "status": "verificat"
+    },
+    "kc_mid": {
+     "value": 1.15,
+     "unit": "coefficient",
+     "source": "S13",
+     "locator": "Chapter 6, Table 12, row 'Peas, Dry/Seed'",
+     "status": "verificat"
+    },
+    "kc_end": {
+     "value": 0.3,
+     "unit": "coefficient",
+     "source": "S13",
+     "locator": "Chapter 6, Table 12, row 'Peas, Dry/Seed'",
+     "status": "verificat"
+    },
+    "stage_days": {
+     "ini": {
+      "value": 20,
+      "unit": "days",
+      "source": "S13",
+      "locator": "Chapter 6, Table 11, row 'Peas', region 'Mediterranean', planting Mar/Apr",
+      "status": "verificat",
+      "note": "Row for another region of the world; FAO-56 has no row for Romania."
+     },
+     "dev": {
+      "value": 30,
+      "unit": "days",
+      "source": "S13",
+      "locator": "Chapter 6, Table 11, row 'Peas', region 'Mediterranean', planting Mar/Apr",
+      "status": "verificat"
+     },
+     "mid": {
+      "value": 35,
+      "unit": "days",
+      "source": "S13",
+      "locator": "Chapter 6, Table 11, row 'Peas', region 'Mediterranean', planting Mar/Apr",
+      "status": "verificat"
+     },
+     "late": {
+      "value": 15,
+      "unit": "days",
+      "source": "S13",
+      "locator": "Chapter 6, Table 11, row 'Peas', region 'Mediterranean', planting Mar/Apr",
+      "status": "verificat"
+     },
+     "total": {
+      "value": 100,
+      "unit": "days",
+      "source": "S13",
+      "locator": "Chapter 6, Table 11, row 'Peas', region 'Mediterranean', planting Mar/Apr",
+      "status": "verificat"
+     }
+    }
+   },
+   "requirements": {
+    "scientific_name": "Pisum sativum",
+    "temp_optimal": {
+     "value": [
+      10,
+      24
+     ],
+     "unit": "°C",
+     "source": "S14",
+     "locator": "record 'Pisum sativum', EcoPort code 1721, fields TOPMN-TOPMX",
+     "status": "verificat"
+    },
+    "temp_absolute": {
+     "value": [
+      4,
+      30
+     ],
+     "unit": "°C",
+     "source": "S14",
+     "locator": "record 'Pisum sativum', EcoPort code 1721, fields TMIN-TMAX",
+     "status": "verificat"
+    },
+    "rain_optimal": {
+     "value": [
+      800,
+      1200
+     ],
+     "unit": "mm/year",
+     "source": "S14",
+     "locator": "record 'Pisum sativum', EcoPort code 1721, fields ROPMN-ROPMX",
+     "status": "verificat"
+    },
+    "rain_absolute": {
+     "value": [
+      350,
+      2500
+     ],
+     "unit": "mm/year",
+     "source": "S14",
+     "locator": "record 'Pisum sativum', EcoPort code 1721, fields RMIN-RMAX",
+     "status": "verificat"
+    },
+    "ph_optimal": {
+     "value": [
+      5.5,
+      7
+     ],
+     "unit": "pH",
+     "source": "S14",
+     "locator": "record 'Pisum sativum', EcoPort code 1721, fields PHOPMN-PHOPMX",
+     "status": "verificat"
+    },
+    "ph_absolute": {
+     "value": [
+      4.5,
+      8.3
+     ],
+     "unit": "pH",
+     "source": "S14",
+     "locator": "record 'Pisum sativum', EcoPort code 1721, fields PHMIN-PHMAX",
+     "status": "verificat"
+    },
+    "killing_temp_rest": {
+     "value": -2,
+     "unit": "°C",
+     "source": "S14",
+     "locator": "record 'Pisum sativum', EcoPort code 1721, field KTMPR",
+     "status": "verificat"
+    },
+    "killing_temp_early_growth": {
+     "value": 0,
+     "unit": "°C",
+     "source": "S14",
+     "locator": "record 'Pisum sativum', EcoPort code 1721, field KTMP",
+     "status": "verificat"
+    },
+    "cycle_length": {
+     "value": [
+      60,
+      140
+     ],
+     "unit": "days",
+     "source": "S14",
+     "locator": "record 'Pisum sativum', EcoPort code 1721, fields GMIN-GMAX",
+     "status": "verificat"
+    },
+    "soil_texture_optimal": {
+     "value": "heavy, medium, light",
+     "unit": "text",
+     "source": "S14",
+     "locator": "record 'Pisum sativum', EcoPort code 1721, field TEXT",
+     "status": "verificat"
+    },
+    "soil_texture_absolute": {
+     "value": "heavy, medium, light",
+     "unit": "text",
+     "source": "S14",
+     "locator": "record 'Pisum sativum', EcoPort code 1721, field TEXTR",
+     "status": "verificat"
+    }
+   },
+   "sowing": {
+    "window": null,
+    "autumn_type_window": {
+     "value": "second ten days of October",
+     "unit": "calendar",
+     "source": "S15",
+     "locator": "'Recomandări tehnologice' (same sentence in the Andrada F, Lavinia F and Olguța F sheets)",
+     "status": "verificat",
+     "days": [
+      "10-11",
+      "10-20"
+     ],
+     "note": "For autumn pea varieties only. No sourced window found for spring peas."
+    }
+   },
+   "rotation": {
+    "min_gap_years": {
+     "value": 6,
+     "unit": "years",
+     "source": "S8",
+     "locator": "p. 37",
+     "status": "de_confirmat",
+     "note": "Between peas and other legumes sensitive to Aphanomyces (lentil, alfalfa). The source could not be opened (server error), so the figure is not confirmed."
+    }
+   },
+   "heat_at_flowering": {
+    "attention": null,
+    "loss": null
+   }
+  },
+  {
+   "id": "soy",
+   "name": "Soybean",
+   "family": "legume",
+   "water": {
+    "kc_ini": {
+     "value": 0.4,
+     "unit": "coefficient",
+     "source": "S13",
+     "locator": "Chapter 6, Table 12, group value 'e. Legumes'",
+     "status": "verificat"
+    },
+    "kc_mid": {
+     "value": 1.15,
+     "unit": "coefficient",
+     "source": "S13",
+     "locator": "Chapter 6, Table 12, row 'Soybeans'",
+     "status": "verificat"
+    },
+    "kc_end": {
+     "value": 0.5,
+     "unit": "coefficient",
+     "source": "S13",
+     "locator": "Chapter 6, Table 12, row 'Soybeans'",
+     "status": "verificat"
+    },
+    "stage_days": {
+     "ini": {
+      "value": 20,
+      "unit": "days",
+      "source": "S13",
+      "locator": "Chapter 6, Table 11, row 'Soybeans', region 'Central USA', planting May",
+      "status": "verificat",
+      "note": "Row for another region of the world; FAO-56 has no row for Romania."
+     },
+     "dev": {
+      "value": 35,
+      "unit": "days",
+      "source": "S13",
+      "locator": "Chapter 6, Table 11, row 'Soybeans', region 'Central USA', planting May",
+      "status": "verificat"
+     },
+     "mid": {
+      "value": 60,
+      "unit": "days",
+      "source": "S13",
+      "locator": "Chapter 6, Table 11, row 'Soybeans', region 'Central USA', planting May",
+      "status": "verificat"
+     },
+     "late": {
+      "value": 25,
+      "unit": "days",
+      "source": "S13",
+      "locator": "Chapter 6, Table 11, row 'Soybeans', region 'Central USA', planting May",
+      "status": "verificat"
+     },
+     "total": {
+      "value": 140,
+      "unit": "days",
+      "source": "S13",
+      "locator": "Chapter 6, Table 11, row 'Soybeans', region 'Central USA', planting May",
+      "status": "verificat"
+     }
+    }
+   },
+   "requirements": {
+    "scientific_name": "Glycine max",
+    "temp_optimal": {
+     "value": [
+      20,
+      33
+     ],
+     "unit": "°C",
+     "source": "S14",
+     "locator": "record 'Glycine max', EcoPort code 1150, fields TOPMN-TOPMX",
+     "status": "verificat"
+    },
+    "temp_absolute": {
+     "value": [
+      10,
+      38
+     ],
+     "unit": "°C",
+     "source": "S14",
+     "locator": "record 'Glycine max', EcoPort code 1150, fields TMIN-TMAX",
+     "status": "verificat"
+    },
+    "rain_optimal": {
+     "value": [
+      600,
+      1500
+     ],
+     "unit": "mm/year",
+     "source": "S14",
+     "locator": "record 'Glycine max', EcoPort code 1150, fields ROPMN-ROPMX",
+     "status": "verificat"
+    },
+    "rain_absolute": {
+     "value": [
+      450,
+      1800
+     ],
+     "unit": "mm/year",
+     "source": "S14",
+     "locator": "record 'Glycine max', EcoPort code 1150, fields RMIN-RMAX",
+     "status": "verificat"
+    },
+    "ph_optimal": {
+     "value": [
+      5.5,
+      6.5
+     ],
+     "unit": "pH",
+     "source": "S14",
+     "locator": "record 'Glycine max', EcoPort code 1150, fields PHOPMN-PHOPMX",
+     "status": "verificat"
+    },
+    "ph_absolute": {
+     "value": [
+      4.5,
+      8.4
+     ],
+     "unit": "pH",
+     "source": "S14",
+     "locator": "record 'Glycine max', EcoPort code 1150, fields PHMIN-PHMAX",
+     "status": "verificat"
+    },
+    "killing_temp_rest": null,
+    "killing_temp_early_growth": null,
+    "cycle_length": {
+     "value": [
+      75,
+      180
+     ],
+     "unit": "days",
+     "source": "S14",
+     "locator": "record 'Glycine max', EcoPort code 1150, fields GMIN-GMAX",
+     "status": "verificat"
+    },
+    "soil_texture_optimal": {
+     "value": "medium, organic",
+     "unit": "text",
+     "source": "S14",
+     "locator": "record 'Glycine max', EcoPort code 1150, field TEXT",
+     "status": "verificat"
+    },
+    "soil_texture_absolute": {
+     "value": "heavy, medium, light",
+     "unit": "text",
+     "source": "S14",
+     "locator": "record 'Glycine max', EcoPort code 1150, field TEXTR",
+     "status": "verificat"
+    }
+   },
+   "sowing": {
+    "window": {
+     "value": "last week of April to first week of May",
+     "unit": "calendar",
+     "source": "S5",
+     "locator": "abstract, p. 187",
+     "status": "verificat",
+     "days": [
+      "04-24",
+      "05-07"
+     ],
+     "note": "The usual sowing time the paper compares early sowing against."
+    },
+    "early_sowing_tested": {
+     "value": "3 April",
+     "unit": "calendar",
+     "source": "S5",
+     "locator": "p. 190, 'Data de semănat a fost 03.04.2020'",
+     "status": "verificat",
+     "days": [
+      "04-03",
+      "04-03"
+     ],
+     "note": "One trial year; soil at sowing depth was 5-6 °C."
+    },
+    "engine_uses": "window: the usual sowing time. The 3 April sowing is a single-year test."
+   },
+   "rotation": {
+    "min_gap_years": null
+   },
+   "heat_at_flowering": {
+    "attention": {
+     "value": [
+      30,
+      35
+     ],
+     "unit": "°C",
+     "source": "S9",
+     "locator": "section 1.2",
+     "status": "de_confirmat",
+     "engine_value": 30,
+     "engine_note": "30 °C, the lower end, so the warning comes early.",
+     "note": "Full text could not be opened; only the DOAJ record was read."
+    },
+    "loss": {
+     "value": 40,
+     "unit": "°C",
+     "source": "S12",
+     "locator": "Annex I, section 4.2, 'Maximum air temperature above which pollination starts to fail (heat stress)', I.6 Soybean, p. 26",
+     "status": "verificat",
+     "note": "Marked 'Estimate' by the authors."
+    }
+   }
+  }
+ ]
+}

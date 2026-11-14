@@ -22,7 +22,7 @@ Stadiul la 14 noiembrie 2026.
 
 TerraCycle este o aplicație de telefon în care un fermier pune o întrebare despre pământul lui și primește un răspuns direct. Întrebarea principală este „ce pun la anul?”, adică rotația culturilor.
 
-**Cel mai important lucru de știut:** din datele NASA, aplicația folosește acum o singură sursă, NASA POWER (vremea zonei). Recomandarea de rotație în sine nu vine încă din date NASA, ci dintr-un tabel provizoriu de reguli. Celelalte surse NASA au codul de descărcare scris, dar nu au fost încă descărcate.
+**Cel mai important lucru de știut:** din datele NASA, aplicația folosește acum o singură sursă, NASA POWER (vremea zonei). Recomandarea de rotație în sine nu vine încă din date NASA, ci dintr-un tabel provizoriu de reguli. Celelalte surse NASA sunt descărcate pentru toate cele patru parcele (14 noiembrie), dar serverul nu le citește încă.
 
 ### 1.1 Cum funcționează acum
 
@@ -70,7 +70,7 @@ Codul: descărcarea în `backend/power.py`, calculele și propozițiile în `bac
 - NASA POWER pe punctul fiecărei parcele, 2001–2020, adunat pe săptămâni, cu trei parametri în plus (punct de rouă, vânt, radiație solară). Este în `backend/data/baked/<id>/profile.json`. E materia primă pentru rejucarea anilor și calendarul sezonului.
 - SoilGrids (nu e NASA): textura solului, pH și carbon organic.
 
-**Cod scris, date nedescărcate** (așteaptă autentificarea Earth Engine; codul e netestat):
+**Descărcat prin Earth Engine pe 14 noiembrie, încă nefolosit de aplicație** (toate cu `status: ok` în `profile.json`):
 
 | Sursă NASA | La ce va folosi | Eticheta |
 |---|---|---|
@@ -95,14 +95,16 @@ Pe lângă NASA: Sentinel-2 (ESA, 10 m), pentru harta zonelor din interiorul par
 | Parcelele și tabelul de culturi | `backend/store.py`, `backend/fields.json` | Contururi reale; nume, culturi și istoric inventate; tabel provizoriu |
 | Vremea și calculele | `backend/power.py`, `backend/analysis.py` | Merg, pe date reale |
 | Conversația și rotația | `backend/engine.py` | Merge; rotația e pe reguli provizorii |
-| Descărcarea tuturor surselor | `backend/field_pull.py` | POWER și SoilGrids descărcate; restul netestat |
+| Descărcarea tuturor surselor | `backend/field_pull.py` | Rulat pe toate sursele și toate parcelele; rezultatul e în `backend/data/baked/` |
+| Tabelul de culturi cu surse | `backend/crops.json`, `backend/SOURCES.md`, `backend/MISSING.md`, `backend/test_crops.py` | Fiecare valoare are sursă, loc în sursă și stare („verificat” sau „de_confirmat”). 15 surse; ce n-are sursă e gol și listat în `MISSING.md`. Un test pică dacă apare o cifră fără sursă. Motorul nu îl folosește încă |
+| AI-ul local | `ai/`, `backend/llm.py`, `backend/knowledge.py`, `backend/llm_prompts.py` | Set de antrenare, corpus de literatură (FAO-56, FAO-66, articole), script de antrenare și arhivă pentru Colab: gata și probate pe rulări scurte. Modelul încă nu e antrenat. Serverul are legătura scrisă, probată doar cu modelul simulat. Detalii în `ai/README.md` |
 | Git | depozitul `TerraCycle` | Un commit, urcat pe GitHub; schimbările din 14 noiembrie sunt necomise |
 
 ### 1.5 Ce mai trebuie făcut
 
 În ordinea în care se deblochează. Detaliile fiecărui punct sunt în secțiunea 4.
 
-1. **Autentificarea Earth Engine și rularea `field_pull.py`** (4.C). O face proprietarul contului. Deblochează toate sursele NASA în afară de POWER.
+1. ~~Autentificarea Earth Engine și rularea `field_pull.py`~~ (4.C). Făcut pe 14 noiembrie.
 2. **Serverul citește `profile.json`**: starea reală a parcelelor din HLS, graficul „How green the crop is”, nivelurile de parcelă după mărime (secțiunea 5).
 3. **Motorul de rotație cu rejucarea anilor** (4.D): miezul proiectului. Abia aici recomandarea începe să vină din date NASA. Cere un tabel de culturi cu surse.
 4. **Calendarul sezonului** (4.E).
@@ -211,7 +213,7 @@ Formele exacte ale răspunsurilor sunt în `app/src/types.ts`.
 
 ### 3.4 Datele folosite acum
 
-Două surse sunt conectate și descărcate: **NASA POWER** și **SoilGrids**. Restul surselor din planul de date (4.C) au codul scris, dar așteaptă autentificarea Earth Engine.
+Două surse sunt conectate și descărcate: **NASA POWER** și **SoilGrids**. Restul surselor din planul de date (4.C) sunt descărcate în `backend/data/baked/`, dar aplicația nu le arată încă.
 
 **NASA POWER**, comunitatea AG, date zilnice, din 1 ianuarie 2001. Serverul îl citește pentru un punct (mijlocul celor patru parcele, 44,231° N, 23,824° E); `field_pull.py` îl descarcă și pe punctul fiecărei parcele, pentru 2001–2020.
 
@@ -311,7 +313,12 @@ Ordinea e cea în care lucrurile se deblochează unul pe altul. „Must” înse
   .\.venv\Scripts\python.exe field_pull.py
   ```
   Proiectul este `terracycle-514620`. POWER și SoilGrids nu cer cont și sunt deja descărcate.
-- **Stadiu:** codul e scris pentru toate sursele. Partea Earth Engine nu a putut fi rulată fără autentificare, deci e netestată; ID-urile colecțiilor și numele benzilor au fost verificate în catalogul Earth Engine pe 14 noiembrie.
+- **Stadiu:** rulat pe 14 noiembrie pentru toate cele patru parcele; toate cele opt surse au `status: ok`. Ce a ieșit:
+  - Pătrate curate numărate pe imagini reale: Sentinel-2 are 1093 (Valea Mare), 616 (Dealul Viei), 207 (Lunca Jiului), 1097 (Pădurea Veche); HLS are 114, 64, 20 și 118. Toate parcelele trec pragul de 10 și la HLS.
+  - Sentinel-2 și HLS arată aceeași curbă a sezonului. Din ea se vede dacă anul a avut cultură de toamnă sau de primăvară.
+  - Relief: toate parcelele sunt plate (pantă medie 1–2°, maximă 4,5°), niciun pătrat abrupt; trei pătrate joase la Pădurea Veche.
+  - Harta zonelor: Valea Mare are 23 de pătrate de 10 m (din 1027) mai slabe în cel puțin jumătate din ani; celelalte parcele au cel mult unul.
+  - IMERG, SMAP și POWER dau aceleași valori pentru toate patru: parcelele stau în același pătrat de grilă.
 
 **Obligatoriu** (calendarul pe 20 de ani și rejucarea):
 

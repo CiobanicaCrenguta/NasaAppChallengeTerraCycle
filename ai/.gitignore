@@ -1,0 +1,7 @@
+.venv/
+models/
+runs/
+__pycache__/
+terracycle_colab.zip
+data/corpus.jsonl
+data/passage_qa.jsonl

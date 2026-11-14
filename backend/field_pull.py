@@ -191,7 +191,9 @@ def region_rows(collection, geometry, scale):
 def pull_modis(f, lat, lon):
     """NDVI of the 250 m squares that touch the field. They also cover the neighbours: area scope."""
     e = ee()
-    geom = e.Geometry(f["geometry"])
+    # getRegion keeps the squares whose centre is inside the geometry; widening the outline by half
+    # a square's diagonal catches every square that touches the field.
+    geom = e.Geometry(f["geometry"]).buffer(177)
     samples = []
     for y in range(Y0, Y1 + 1):
         def make(y=y):
@@ -202,6 +204,8 @@ def pull_modis(f, lat, lon):
             if r["NDVI"] is not None and r["SummaryQA"] in (0, 1):  # 0 good, 1 marginal; snow and cloud dropped
                 by_day.setdefault(r["time"], []).append(r["NDVI"] * 0.0001)
         samples += [(ms_date(t), mean(v)) for t, v in by_day.items()]
+    if not samples:
+        raise ValueError("no usable MODIS value for this field")
     return {"weekly": {"ndvi_area": weekly(samples, mean)}}
 
 
@@ -346,18 +350,21 @@ def pull_s2(f, lat, lon):
     series = weekly(samples, median)
     bare = {y: sum(1 for v in w if v is not None and v < BARE_NDVI) for y, w in series.items()}
 
+    # The seasonal composite has no grid of its own, so ask for Sentinel-2's own one: UTM, 10 m squares.
+    utm = f"EPSG:{32600 + int((lon + 180) // 6) + 1 + (100 if lat < 0 else 0)}"
+
     def make_zones():
         # Each growing season: every cell's peak NDVI next to the field's median peak. The crop changes
         # from year to year, so only the difference inside the field is kept, never the level.
         rels = []
         for y in years:
             peak = col.filterDate(f"{y}-04-01", f"{y}-10-01").map(ndvi).reduce(e.Reducer.percentile([90])).rename("peak")
-            field_median = e.Number(peak.reduceRegion(e.Reducer.median(), inner, 10).get("peak"))
-            rels.append(peak.divide(e.Image.constant(field_median)).subtract(1).rename("rel"))
+            field_median = e.Number(peak.reduceRegion(e.Reducer.median(), inner, 10, crs=utm).get("peak"))
+            rels.append(peak.divide(e.Image.constant(field_median)).subtract(1).toFloat().rename("rel"))
         stack = e.ImageCollection(rels)
         img = stack.mean().rename("rel").addBands(stack.map(lambda i: i.lt(WEAK_REL)).sum().rename("weak_years")) \
             .addBands(stack.count().rename("years"))
-        return img.sample(region=inner, scale=10, geometries=True).getInfo()["features"]
+        return img.sample(region=inner, scale=10, projection=utm, geometries=True).getInfo()["features"]
     cells = cached(f"s2zones_{f['id']}", make_zones)
     feats = [{"type": "Feature", "geometry": c["geometry"], "properties": {
         "rel": round(c["properties"]["rel"], 3), "weak_years": c["properties"]["weak_years"], "years": c["properties"]["years"]}}
@@ -365,7 +372,7 @@ def pull_s2(f, lat, lon):
     return {
         "weekly": {"ndvi_field_10m": series},
         "static": {"s2": {"clean_pixels": pixels, "dates": len(samples), "bare_weeks_by_year": bare, "zone_cells": len(feats)}},
-        "files": {"zones.geojson": {"type": "FeatureCollection", "cell_m": 10, "weak_rel": WEAK_REL, "features": feats}},
+        "files": {"zones.geojson": {"type": "FeatureCollection", "cell_m": 10, "grid": utm, "weak_rel": WEAK_REL, "features": feats}},
     }
 
 
