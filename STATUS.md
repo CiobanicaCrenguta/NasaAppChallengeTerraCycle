@@ -97,6 +97,7 @@ Pe lângă NASA: Sentinel-2 (ESA, 10 m), pentru harta zonelor din interiorul par
 | Conversația și rotația | `backend/engine.py` | Merge; rotația e pe reguli provizorii |
 | Descărcarea tuturor surselor | `backend/field_pull.py` | Rulat pe toate sursele și toate parcelele; rezultatul e în `backend/data/baked/` |
 | Tabelul de culturi cu surse | `backend/crops.json`, `backend/SOURCES.md`, `backend/MISSING.md`, `backend/test_crops.py` | Fiecare valoare are sursă, loc în sursă și stare („verificat” sau „de_confirmat”). 15 surse; ce n-are sursă e gol și listat în `MISSING.md`. Un test pică dacă apare o cifră fără sursă. Motorul nu îl folosește încă |
+| AI-ul local | `ai/`, `backend/llm.py`, `backend/knowledge.py`, `backend/llm_prompts.py` | Set de antrenare, corpus de literatură (FAO-56, FAO-66, articole), script de antrenare și arhivă pentru Colab: gata și probate pe rulări scurte. Modelul încă nu e antrenat. Serverul are legătura scrisă, probată doar cu modelul simulat. Detalii în `ai/README.md` |
 | Git | depozitul `TerraCycle` | Un commit, urcat pe GitHub; schimbările din 14 noiembrie sunt necomise |
 
 ### 1.5 Ce mai trebuie făcut

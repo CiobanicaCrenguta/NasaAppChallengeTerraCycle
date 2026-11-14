@@ -2,6 +2,8 @@
 
 Honesty rules:
 - weather facts come from analysis.py (computed from NASA POWER);
+- the local language model (llm.py) only reads the question and words answers from facts we give it;
+  sowing, crop-gap, heat and soil answers come from knowledge.py and always carry their source;
 - crop greenness is not connected yet, so field-health questions say so instead of guessing;
 - the rotation pick uses a PLACEHOLDER rule table (store.CROPS) and says what it is based on.
 """
@@ -10,7 +12,9 @@ import unicodedata
 import uuid
 
 import analysis
-from store import CROPS, FIELDS, crop, field
+import knowledge
+import llm
+from store import CROPS, FIELDS, HERE, crop, field
 
 SESSIONS: dict[str, dict] = {}
 
@@ -121,6 +125,79 @@ def _health(s):
                 replies={"id": "next", "options": [PLANT]})
 
 
+# ---------- sourced answers (crop table, soil) ----------
+def _source_titles():
+    """{"S1": "first line of that entry in SOURCES.md"}"""
+    out, current = {"SoilGrids": "ISRIC SoilGrids 2.0, soil maps on a 250 m grid; an estimate for the area"}, None
+    for line in (HERE / "SOURCES.md").read_text(encoding="utf-8").splitlines():
+        if line.startswith("## S"):
+            current = line[3:].strip()
+        elif current and line.strip():
+            out[current] = line.strip().replace("*", "")
+            current = None
+    return out
+
+
+SOURCE_TITLES = _source_titles()
+CROP_REPLIES = [{"value": c["id"], "label": c["name"]} for c in CROPS if c["id"] in knowledge.CROPS]
+LIMITS_REPLY = {"id": "next", "options": [{"value": "limits", "label": "What can't you see?"}]}
+
+
+def _sourced(question, facts, f=None):
+    text, by_model = llm.answer(question, facts)
+    cited = list(dict.fromkeys(fact["source"] for fact in facts))
+    detail = " ".join(f"[{c}] {SOURCE_TITLES.get(c, c)}" for c in cited) if cited else \
+        "I only give values I can point to a source for. This one is on the list of what is still missing."
+    m = _msg(text, f, detail=detail, replies=LIMITS_REPLY)
+    m["wordedBy"] = "model" if by_model else "rules"
+    return m
+
+
+def _knowledge(s, intent, crop_id, after, question):
+    if intent == "soil":
+        f = field(s["fieldId"])
+        return _sourced(question, knowledge.soil(f["id"]), f)
+    if not crop_id:
+        s["pending"] = {"intent": intent, "after": after, "question": question}
+        return _msg("Which crop do you mean?", replies={"id": "crop", "options": CROP_REPLIES})
+    facts = {"sowing": lambda: knowledge.sowing(crop_id), "heat": lambda: knowledge.heat(crop_id),
+             "gap": lambda: knowledge.gap(crop_id, after)}[intent]()
+    return _sourced(question, facts)
+
+
+def _weather(weather):
+    rain, soil = analysis.overview_stats(weather)
+    dry = rain["warn"] or soil["warn"]
+    return _msg("It has been dry in your area lately." if dry else "Nothing unusual in your area's weather lately.",
+                detail=f"{rain['label']}: {rain['value']} ({rain['note'].lower()}). Water in the soil: {soil['value'].lower()}. "
+                       "These are estimates for your area from NASA POWER, not measurements on your field.",
+                replies=LIMITS_REPLY)
+
+
+def _from_model(s, read, question, weather):
+    """Acts on what the language model understood. Returns a message, or None to continue with the usual flow."""
+    if read["field"] and field(read["field"]):
+        s["fieldId"] = read["field"]
+    intent = read["intent"]
+    if intent in ("rotation", "health"):
+        s["intent"] = intent
+        if intent == "rotation" and read["priority"]:
+            s["priority"] = read["priority"]
+        return None
+    if intent == "weather":
+        return _weather(weather)
+    if intent == "limits":
+        return _limits()
+    if intent == "soil":
+        s["intent"], s["pending"] = "soil", {"intent": "soil", "after": None, "question": question}
+        return None  # _next asks for the field if it is not known
+    if intent in ("sowing", "gap", "heat"):
+        return _knowledge(s, intent, read["crop"], read["after"], question)
+    s.pop("intent", None)
+    return _msg("That is outside what I can help with. Here is what I can do.", replies={"id": "intent", "options": [
+        PLANT, {"value": "health", "label": "How my fields are doing"}]})
+
+
 # ---------- flow ----------
 def _next(s, weather):
     if not s.get("intent"):
@@ -132,10 +209,16 @@ def _next(s, weather):
     f = field(s["fieldId"])
     if s["intent"] == "health":
         return _health(s)
+    if s["intent"] == "soil":
+        return _knowledge(s, "soil", None, None, (s.get("pending") or {}).get("question", "What is my soil like?"))
     if not s.get("priority"):
         return _msg("What matters most to you?", f, replies={"id": "priority", "options": [
             {"value": "water", "label": "Saving water"}, {"value": "soil", "label": "Healthier soil"}, {"value": "income", "label": "Income"}]})
     return _rotation(s)
+
+
+def _field_list():
+    return [{"id": f["id"], "name": f["name"], "crop": crop(f["cropId"])["name"], "ha": f["ha"]} for f in FIELDS]
 
 
 ROTATION_WORDS = re.compile(r"plant|sow|rotat|next year|grow")
@@ -159,6 +242,9 @@ def converse(req: dict, weather) -> dict:
             s["priority"], s["intent"] = value, "rotation"
         elif rid == "intent" and value in ("rotation", "health"):
             s["intent"] = value
+        elif rid == "crop" and value in knowledge.CROPS and s.get("pending"):
+            pending = s.pop("pending")
+            return _knowledge(s, pending["intent"], value, pending["after"], pending["question"])
         elif rid == "next":
             if value == "why":
                 return _why(s, weather)
@@ -168,7 +254,12 @@ def converse(req: dict, weather) -> dict:
                 s["priority"], s["intent"] = None, "rotation"
             if value == "rotation":
                 s["intent"] = "rotation"
-    elif req.get("text"):
+    elif req.get("text") and (read := llm.understand(_field_list(), req["text"])):
+        message = _from_model(s, read, req["text"], weather)
+        if message:
+            message["understoodBy"] = "model"
+            return message
+    elif req.get("text"):  # the language model is off or gave nothing usable: match on words
         t = _norm(req["text"])
         intent = "rotation" if ROTATION_WORDS.search(t) else "health" if HEALTH_WORDS.search(t) else None
         named = next((f for f in FIELDS if _norm(f["name"]) in t), None)

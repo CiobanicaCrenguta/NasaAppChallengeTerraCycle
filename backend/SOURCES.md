@@ -107,3 +107,10 @@ Institutul Național de Cercetare-Dezvoltare Agricolă Fundulea. (n.d.). *Soiul 
 URL: https://www.incda-fundulea.ro/fise/pdf/Mazare/Andrada.PDF
 Used for: sowing window of autumn peas.
 Opened: yes. The same sentence is in the sheets for Lavinia F and Olguța F (same folder on the site).
+
+## S16
+
+Steduto, P., Hsiao, T. C., Fereres, E., & Raes, D. (2012). *Crop yield response to water* (FAO Irrigation and Drainage Paper 66). Rome: Food and Agriculture Organization of the United Nations. ISBN 978-92-5-107274-5.
+URL: https://www.fao.org/4/i2800e/i2800e.pdf
+Used for: reading material for the local language model (see `ai/README.md`). No value in `crops.json` comes from it yet.
+Opened: yes (title page, authors and year read in the file).
