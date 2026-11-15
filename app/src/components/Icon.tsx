@@ -1,7 +1,7 @@
 import Svg, { Path, Circle, Rect, Line, Polyline } from 'react-native-svg';
 import { colors } from '../theme';
 
-export type IconName = 'mic' | 'chevron' | 'back' | 'speaker' | 'chat' | 'map' | 'check' | 'x' | 'clock' | 'plus' | 'send' | 'chart';
+export type IconName = 'mic' | 'chevron' | 'back' | 'speaker' | 'chat' | 'map' | 'check' | 'x' | 'clock' | 'plus' | 'send' | 'chart' | 'down' | 'up' | 'leaf' | 'drop' | 'sun' | 'layers' | 'info';
 
 export function Icon({ name, size = 24, color = colors.ink, stroke = 2 }: { name: IconName; size?: number; color?: string; stroke?: number }) {
   const p = { stroke: color, strokeWidth: stroke, fill: 'none', strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
@@ -18,6 +18,13 @@ export function Icon({ name, size = 24, color = colors.ink, stroke = 2 }: { name
       {name === 'clock' && (<><Circle cx={12} cy={12} r={9} {...p} /><Polyline points="12 7 12 12 15.5 14" {...p} /></>)}
       {name === 'plus' && <Path d="M12 5v14M5 12h14" {...p} />}
       {name === 'chart' && <Path d="M4 20V10M10 20V4M16 20v-7M21 20H3" {...p} />}
+      {name === 'down' && <Polyline points="6 9 12 15 18 9" {...p} />}
+      {name === 'up' && <Polyline points="6 15 12 9 18 15" {...p} />}
+      {name === 'leaf' && (<><Path d="M5 19c0-8 5-13 14-14 0 9-5 14-14 14z" {...p} /><Path d="M5 19l8-8" {...p} /></>)}
+      {name === 'drop' && <Path d="M12 3.5c3.2 4 5.5 7 5.5 10a5.5 5.5 0 0 1-11 0c0-3 2.3-6 5.5-10z" {...p} />}
+      {name === 'sun' && (<><Circle cx={12} cy={12} r={4} {...p} /><Path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4" {...p} /></>)}
+      {name === 'layers' && (<><Path d="M12 4l8 4-8 4-8-4z" {...p} /><Path d="M4 12l8 4 8-4M4 16l8 4 8-4" {...p} /></>)}
+      {name === 'info' && (<><Circle cx={12} cy={12} r={9} {...p} /><Path d="M12 11v6M12 7.5v.5" {...p} /></>)}
       {name === 'send' && <Path d="M12 19V5M6 11l6-6 6 6" {...p} />}
     </Svg>
   );

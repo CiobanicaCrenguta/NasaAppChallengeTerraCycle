@@ -76,7 +76,7 @@ export default function LandScreen() {
                   <FieldShape geometry={f.geometry} health={p.health} />
                   <View style={{ flex: 1 }}>
                     <Text style={type.title}>{p.name}</Text>
-                    <Text style={[type.body, { fontSize: 14, color: colors.muted }]}>{p.crop} · {p.ha.toFixed(1)} ha</Text>
+                    <Text style={[type.body, { fontSize: 14, color: colors.muted }]}>{p.crop} · {p.ha.toFixed(p.ha < 1 ? 2 : 1)} ha</Text>
                   </View>
                   <Text style={{ fontFamily: fonts.bold, fontSize: 13, color: p.health === 'good' ? colors.green : p.health === 'unknown' ? colors.muted : colors.orange }}>{p.healthLabel}</Text>
                 </Pressable>

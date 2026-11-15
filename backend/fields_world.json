@@ -1,0 +1,193 @@
+{
+ "_note": "Test farm for checking that the pipeline works anywhere. Rectangles placed by coordinates in farming regions; names, crops and history are SAMPLE values.",
+ "user": {
+  "name": "Mariana",
+  "region": "Test farm, four countries"
+ },
+ "fields": [
+  {
+   "id": "us",
+   "name": "Iowa Quarter",
+   "cropId": "corn",
+   "history": [
+    {
+     "year": 2024,
+     "cropId": "corn"
+    },
+    {
+     "year": 2025,
+     "cropId": "soy"
+    },
+    {
+     "year": 2026,
+     "cropId": "corn"
+    }
+   ],
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -93.802425,
+       42.198191
+      ],
+      [
+       -93.797575,
+       42.198191
+      ],
+      [
+       -93.797575,
+       42.201809
+      ],
+      [
+       -93.802425,
+       42.201809
+      ],
+      [
+       -93.802425,
+       42.198191
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "id": "ar",
+   "name": "Pampa Sur",
+   "cropId": "soy",
+   "history": [
+    {
+     "year": 2024,
+     "cropId": "wheat"
+    },
+    {
+     "year": 2025,
+     "cropId": "soy"
+    },
+    {
+     "year": 2026,
+     "cropId": "soy"
+    }
+   ],
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       -60.601623,
+       -33.901357
+      ],
+      [
+       -60.598377,
+       -33.901357
+      ],
+      [
+       -60.598377,
+       -33.898643
+      ],
+      [
+       -60.601623,
+       -33.898643
+      ],
+      [
+       -60.601623,
+       -33.901357
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "id": "in",
+   "name": "Punjab Plot",
+   "cropId": "wheat",
+   "history": [
+    {
+     "year": 2024,
+     "cropId": "wheat"
+    },
+    {
+     "year": 2025,
+     "cropId": "wheat"
+    },
+    {
+     "year": 2026,
+     "cropId": "wheat"
+    }
+   ],
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       75.599686,
+       30.749774
+      ],
+      [
+       75.600314,
+       30.749774
+      ],
+      [
+       75.600314,
+       30.750226
+      ],
+      [
+       75.599686,
+       30.750226
+      ],
+      [
+       75.599686,
+       30.749774
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "id": "ke",
+   "name": "Nakuru Shamba",
+   "cropId": "corn",
+   "history": [
+    {
+     "year": 2024,
+     "cropId": "corn"
+    },
+    {
+     "year": 2025,
+     "cropId": "peas"
+    },
+    {
+     "year": 2026,
+     "cropId": "corn"
+    }
+   ],
+   "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+     [
+      [
+       36.049888,
+       -0.35009
+      ],
+      [
+       36.050112,
+       -0.35009
+      ],
+      [
+       36.050112,
+       -0.34991
+      ],
+      [
+       36.049888,
+       -0.34991
+      ],
+      [
+       36.049888,
+       -0.35009
+      ]
+     ]
+    ]
+   }
+  }
+ ]
+}

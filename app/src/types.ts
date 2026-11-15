@@ -5,7 +5,11 @@ export type Priority = 'water' | 'soil' | 'income';
 export type Polygon = { type: 'Polygon'; coordinates: number[][][] };
 export type FieldFeature = {
   type: 'Feature';
-  properties: { id: string; name: string; crop: string; ha: number; health: Health; healthLabel: string };
+  properties: {
+    id: string; name: string; crop: string; ha: number; health: Health; healthLabel: string;
+    /** Centres [lon, lat] of 10 m squares that are often less green than the rest of the field. */
+    weakSquares?: [number, number][];
+  };
   geometry: Polygon;
 };
 export type FieldCollection = { type: 'FeatureCollection'; features: FieldFeature[] };

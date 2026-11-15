@@ -1176,6 +1176,14 @@
      "locator": "p. 37",
      "status": "de_confirmat",
      "note": "Between peas and other legumes sensitive to Aphanomyces (lentil, alfalfa). The source could not be opened (server error), so the figure is not confirmed."
+    },
+    "leaves_nitrogen": {
+     "value": true,
+     "unit": "yes/no",
+     "source": "S6",
+     "locator": "p. 11, 'Culturi premergătoare'",
+     "status": "verificat",
+     "note": "S6 says grain legumes leave a well-structured, clean soil with a high amount of nitrogen for the next crop. No figure is given."
     }
    },
    "heat_at_flowering": {
@@ -1365,7 +1373,15 @@
     "engine_uses": "window: the usual sowing time. The 3 April sowing is a single-year test."
    },
    "rotation": {
-    "min_gap_years": null
+    "min_gap_years": null,
+    "leaves_nitrogen": {
+     "value": true,
+     "unit": "yes/no",
+     "source": "S6",
+     "locator": "p. 11, 'Culturi premergătoare'",
+     "status": "verificat",
+     "note": "S6 says grain legumes leave a well-structured, clean soil with a high amount of nitrogen for the next crop. No figure is given."
+    }
    },
    "heat_at_flowering": {
     "attention": {

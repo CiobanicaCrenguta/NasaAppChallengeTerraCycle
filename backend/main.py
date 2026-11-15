@@ -6,24 +6,22 @@ from fastapi import FastAPI, HTTPException
 
 import analysis
 import engine
+import fieldstate
 import power
-from store import FIELDS, USER, area_point, crop, field
+from store import FIELDS, USER, crop, field, weather_point
 
 app = FastAPI(title="Field app backend")
 
-_weather = None
+_weather: dict = {}
 
 
-def weather() -> analysis.Weather:
-    global _weather
-    if _weather is None:
-        lat, lon = area_point()
-        _weather = analysis.Weather(power.load(lat, lon))
-    return _weather
+def weather(field_id: str | None = None) -> analysis.Weather:
+    """Area weather for a field. Fields close together share one point; see store.weather_point."""
+    point = weather_point(field_id)
+    if point not in _weather:
+        _weather[point] = analysis.Weather(power.load(*point), south=point[0] < 0)
+    return _weather[point]
 
-
-# Crop greenness is not connected yet, so no field has a health reading.
-HEALTH, HEALTH_LABEL = "unknown", "No satellite reading yet"
 
 
 @app.get("/me")
@@ -36,8 +34,26 @@ def fields():
     return {"type": "FeatureCollection", "features": [
         {"type": "Feature", "geometry": f["geometry"], "properties": {
             "id": f["id"], "name": f["name"], "crop": crop(f["cropId"])["name"], "ha": f["ha"],
-            "health": HEALTH, "healthLabel": HEALTH_LABEL}}
+            "health": fieldstate.health(f["id"])[0], "healthLabel": fieldstate.health(f["id"])[1],
+            "weakSquares": _weak_squares(f["id"])}}
         for f in FIELDS]}
+
+
+def _weak_squares(field_id):
+    """Centres [lon, lat] of the 10 m squares that are often less green; empty unless the field is flagged."""
+    z = fieldstate.zones(field_id)
+    return [[x, y] for x, y, _ in z["points"]] if z and z["flag"] else []
+
+
+@app.get("/fields/{field_id}/zones")
+def field_zones(field_id: str):
+    """The 10 m squares that were often less green than the rest of the field: [[lon, lat, years], ...]."""
+    if not field(field_id):
+        raise HTTPException(404, "No such field")
+    z = fieldstate.zones(field_id)
+    if not z:
+        return {"cellM": 10, "years": 0, "cells": 0, "points": []}
+    return {"cellM": z["cell_m"], "years": z["years"], "cells": z["cells"], "points": z["points"] if z["flag"] else []}
 
 
 @app.get("/fields/{field_id}")
@@ -54,35 +70,50 @@ def overview():
     stats = analysis.overview_stats(w)
     dry = any(s["warn"] for s in stats)
     headline = "It has been dry in your area lately." if dry else "Nothing unusual in your area's weather lately."
-    return {"headline": headline, "attention": [], "stats": stats, "asOf": w.last.isoformat()}
+    attention = [{"fieldId": f["id"], "name": f["name"], "label": fieldstate.health(f["id"])[1]}
+                 for f in FIELDS if fieldstate.health(f["id"])[0] == "weak_spot"]
+    return {"headline": headline, "attention": attention, "stats": stats, "asOf": w.last.isoformat()}
 
 
 @app.get("/insights")
 def insights(field: str | None = None):
-    w = weather()
+    w = weather(field)
     return {
         "area": USER["region"],
         "knows": [
-            {"id": "field", "title": "Known about your fields", "items": [
-                "Their outlines and sizes, from the map you drew"],
-             "note": "How green the crop is, from satellite images, is not connected yet."},
+            {"id": "field", "title": "Measured on your fields", "items": [
+                "Their outlines and sizes, from the map you drew",
+                "How green each field is, every few days since 2017",
+                "Which parts of a field are often less green than the rest"],
+             "note": "From Sentinel-2 images (ESA), on squares of 10 m. NASA's HLS images (30 m) read the same fields as a second check."},
             {"id": "area", "title": "Estimated for your area", "items": [
                 "Rain, every day since 2001",
                 "Temperature, every day since 2001",
-                "Water in the root zone of the soil, a model estimate"],
-             "note": f"One value for a square about 50 km wide. Good for trends, too coarse to tell one field from the next. "
-                     f"Latest data: {w.last:%d %B %Y}."},
+                "Water in the root zone of the soil, a model estimate",
+                "Soil type, from a world soil map"],
+             "note": f"Weather is one value for a square about 50 km wide (NASA POWER); soil is from SoilGrids, 250 m. Good for trends, "
+                     f"too coarse to tell one field from the next. Latest weather data: {w.last:%d %B %Y}."},
             {"id": "you", "title": "What you told me", "items": [
                 "The crops you grew each year", "Your answers to my questions"]},
             {"id": "blind", "title": "What I cannot see", "items": [
                 "Pests and disease", "Packed soil and blocked drains", "What happens on one field and not on its neighbour"]},
         ],
-        "cards": analysis.insight_cards(w),
+        "cards": _green_card(field) + analysis.insight_cards(w),
     }
+
+
+def _green_card(field_id):
+    """The greenness chart of one field (the chosen one, or the first), ahead of the area charts."""
+    f = next((x for x in FIELDS if x["id"] == field_id), FIELDS[0])
+    series, g = fieldstate.month_series(f["id"]), fieldstate.greenness(f["id"])
+    if not series or not g:
+        return []
+    return [{"id": "green", "scope": "field", "perField": True, "series": series,
+             "takeaway": f"{f['name']} has {g['words']} now."}]
 
 
 @app.post("/converse")
 def converse(req: dict):
     if not req.get("sessionId"):
         raise HTTPException(400, "sessionId is required")
-    return engine.converse(req, weather())
+    return engine.converse(req, weather)
