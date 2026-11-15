@@ -44,7 +44,7 @@ RAIN_NOTE = ("Rain is NASA POWER's estimate for your area, 2001-2020. The rain e
 
 
 def _left_out(item):
-    text = f"Left out {item['text']} [{item['source']}]"
+    text = f"Left out {item['text']}"
     return text + (" (value not confirmed yet)" if item["status"] != "verificat" else "")
 
 
@@ -59,7 +59,7 @@ def _rotation(s, weather):
     fit = pick["fit"]
     reasons = []
     if p == "soil" and pick["nitrogen"]:
-        reasons.append("Leaves nitrogen in the soil for the next crop [S6]")
+        reasons.append("Leaves nitrogen in the soil for the next crop")
     reasons.append(f"Enough rain for it here in {fit['optimal_years']} of {fit['years']} years")
     if pick["fresh"]:
         reasons.append("Not grown on this field in the last 3 years")
@@ -93,11 +93,12 @@ def _why(s, weather):
                        f" (from {c['fit']['optimal_mm']} mm a year)" for c in first["candidates"])
     parts.append(f"Years with enough rain for each crop that remains: {ranked}.")
     if p == "soil":
-        parts.append("With soil first, crops that leave nitrogen in the soil go ahead [S6].")
+        parts.append("With soil first, crops that leave nitrogen in the soil go ahead.")
     if p == "income":
         parts.append("I have no price data, so income did not change the order.")
-    parts.append("A crop not grown here in the last 3 years goes ahead of one that was [S1].")
+    parts.append("A crop not grown here in the last 3 years goes ahead of one that was.")
     parts.append(RAIN_NOTE)
+    parts.append(_sources_line([x["source"] for x in first["excluded"]] + ["S1"] + (["S6"] if p == "soil" else []) + ["S14"]))
     rain_chart = analysis.insight_cards(weather(f["id"]))[0]["series"]
     return _msg("It passes the rotation rules and suits the rain here best.", f, detail=" ".join(parts),
                 cards=[{"type": "chart", "series": rain_chart}], replies=LIMITS_REPLY)
@@ -164,10 +165,31 @@ CROP_REPLIES = [{"value": c["id"], "label": c["name"]} for c in CROPS if c["id"]
 LIMITS_REPLY = {"id": "next", "options": [{"value": "limits", "label": "What can't you see?"}]}
 
 
+_MARK = re.compile(r"\s*\[[^\]]+\]")
+
+
+def _plain(text):
+    """The sentence without source marks like [S1]. The farmer reads plain sentences; sources go under "Sources:"."""
+    return _MARK.sub("", text).strip()
+
+
+def _short(source_id):
+    """Author and year of a source: 'Luo, Q. (2011)'."""
+    title = SOURCE_TITLES.get(source_id, source_id)
+    year = re.search(r"\((?:19|20)\d\d\)|\(n\.d\.\)", title)
+    return title[:year.end()] if year else title.split(";")[0].split(",")[0]
+
+
+def _sources_line(ids):
+    ids = list(dict.fromkeys(ids))
+    return "Sources: " + "; ".join(_short(i) for i in ids) + "." if ids else ""
+
+
 def _sourced(question, facts, f=None):
-    text, by_model = llm.answer(question, facts)
+    text, by_model = llm.answer(question, facts)  # checked against the facts while the source marks are still in
+    text = _plain(text)
     cited = list(dict.fromkeys(fact["source"] for fact in facts))
-    detail = " ".join(f"[{c}] {SOURCE_TITLES.get(c, c)}" for c in cited) if cited else \
+    detail = _sources_line(cited) if cited else \
         "I only give values I can point to a source for. This one is on the list of what is still missing."
     m = _msg(text, f, detail=detail, replies=LIMITS_REPLY)
     m["wordedBy"] = "model" if by_model else "rules"
